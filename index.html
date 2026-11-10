@@ -84,12 +84,12 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     <h1>Çocuk Kulübü Uygulaması</h1>
     <div class="not">Ücret hesaplama, evrak, öğrenci listesi ve dekont takibi. Her okul yalnızca kendi verisini görür.</div>
     <div class="sekme" role="tablist"><button data-gs="giris" aria-selected="true">Giriş</button><button data-gs="kayit" aria-selected="false">Okul kaydı</button></div>
-    <form id="fGiris">
+    <form id="fGiris" onsubmit="event.preventDefault()">
       <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required></label>
       <label>Şifre<input name="sifre" type="password" autocomplete="current-password" required></label>
       <div class="dugmeler"><button class="btn ana">Giriş yap</button></div>
     </form>
-    <form id="fKayit" hidden>
+    <form id="fKayit" hidden onsubmit="event.preventDefault()">
       <label>Kayıt kodu<input name="kayitKodu" required placeholder="Kulüp koordinatöründen alın"></label>
       <label>Okul adı<input name="okulAdi" required placeholder="ör. Bucuk İlkokulu"></label>
       <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required placeholder="ör. bucuk.ilkokulu"></label>
@@ -147,7 +147,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     <div class="bolum" id="b-hesapim" hidden>
       <div class="kart" style="max-width:460px">
         <h3 style="margin-top:0" id="hesapBaslik"></h3>
-        <form id="fSifre">
+        <form id="fSifre" onsubmit="event.preventDefault()">
           <label>Mevcut şifre<input name="eski" type="password" autocomplete="current-password" required></label>
           <label>Yeni şifre<input name="yeni" type="password" autocomplete="new-password" minlength="6" required></label>
           <div class="dugmeler"><button class="btn ana">Şifreyi değiştir</button></div>
@@ -186,7 +186,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
 <div class="yukleniyor" id="yuk" hidden></div>
 
 <script src="config.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <script>
 (function () {
   "use strict";
