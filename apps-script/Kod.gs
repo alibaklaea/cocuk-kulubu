@@ -1,7 +1,7 @@
 /**
  * Çocuk Kulübü Uygulaması · Google Drive arka ucu (Google Apps Script)
  * Veriler bu betiğin bağlı olduğu Google E-Tablo'da durur. Her okul yalnızca kendi satırlarını görür.
- * Kayıt kodu: "Ayarlar" sayfasındaki B1 hücresi (okullara bu kodu siz verirsiniz).
+ * Kayıt kodu: "Ayarlar" sayfasındaki B2 hücresi (okullara bu kodu siz verirsiniz).
  * Dekontlar Google Drive'ın yazı okuma (OCR) özelliğiyle okunur; dosya okunduktan hemen sonra silinir, yalnızca bilgiler kalır.
  */
 
