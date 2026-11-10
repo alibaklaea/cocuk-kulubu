@@ -8,7 +8,7 @@
 var SAYFALAR = {
   Ayarlar: ['Ayar', 'Değer'],
   Okullar: ['okulId', 'okulAdi', 'kullanici', 'sifreOzet', 'tuz', 'kayitZamani'],
-  Oturumlar: ['token', 'okulId', 'sonKullanim'],
+  Oturumlar: ['token', 'okulId', 'sonKullanim', 'kullanici'],
   Ogrenciler: ['okulId', 'ogrId', 'adSoyad', 'sinif', 'sube', 'veliTel', 'dersler', 'ucret', 'durum', 'dekontNo', 'odemeTarihi', 'tutar', 'not'],
   Dekontlar: ['okulId', 'dekId', 'dekontNo', 'tarih', 'tutar', 'gonderen', 'aciklama', 'ogrIdler', 'durum', 'adaylar', 'dosyaAdi', 'yuklenme'],
   Veri: ['okulId', 'anahtar', 'json', 'guncelleme']
@@ -20,7 +20,8 @@ function kurulum() {
   var ss = tablo_();
   Object.keys(SAYFALAR).forEach(function (ad) {
     var sh = ss.getSheetByName(ad) || ss.insertSheet(ad);
-    if (sh.getLastRow() === 0) { sh.appendRow(SAYFALAR[ad]); sh.setFrozenRows(1); sh.getRange(1, 1, 1, SAYFALAR[ad].length).setFontWeight('bold'); }
+    if (sh.getLastRow() === 0) { sh.appendRow(SAYFALAR[ad]); sh.setFrozenRows(1); }
+    sh.getRange(1, 1, 1, SAYFALAR[ad].length).setValues([SAYFALAR[ad]]).setFontWeight('bold'); // yeni sütunlar eklenince başlık da güncellensin
     if (ad !== 'Ayarlar') sh.getRange(1, 1, sh.getMaxRows(), SAYFALAR[ad].length).setNumberFormat('@'); // telefonun baştaki 0'ı ve numaralar metin kalsın
   });
   var ay = ss.getSheetByName('Ayarlar');
@@ -86,13 +87,13 @@ function oturumOkul_(token) {
   var o = satirlar_('Oturumlar').filter(function (x) { return x.token === token; })[0];
   if (!o || (new Date() - new Date(o.sonKullanim)) > OTURUM_GUN * 864e5) throw hata_('Oturum süresi doldu, yeniden giriş yapın.');
   o.sonKullanim = new Date().toISOString(); yaz_('Oturumlar', o);
-  var okul = satirlar_('Okullar').filter(function (x) { return x.okulId === o.okulId; })[0];
+  var okul = satirlar_('Okullar').filter(function (x) { return x.okulId === o.okulId && (!o.kullanici || x.kullanici === o.kullanici); })[0];
   if (!okul) throw hata_('Okul bulunamadı.');
   return okul;
 }
 function oturumAc_(okul) {
   var t = Utilities.getUuid() + Utilities.getUuid();
-  ekle_('Oturumlar', { token: t, okulId: okul.okulId, sonKullanim: new Date().toISOString() });
+  ekle_('Oturumlar', { token: t, okulId: okul.okulId, sonKullanim: new Date().toISOString(), kullanici: okul.kullanici });
   return { token: t, okul: { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: okul.kullanici } };
 }
 
@@ -117,6 +118,26 @@ var ISLEMLER = {
   cikis: { f: function (g) {
     var o = satirlar_('Oturumlar').filter(function (x) { return x.token === g.token; });
     sil_('Oturumlar', o.map(function (x) { return x._satir; })); return true;
+  } },
+  // aynı okula birden çok kullanıcı (ör. idareci ve öğretmen): hepsi aynı verileri görür
+  kullanicilar: { f: function (g, okul) {
+    return satirlar_('Okullar').filter(function (x) { return x.okulId === okul.okulId; }).map(function (x) { return { kullanici: x.kullanici, kayitZamani: x.kayitZamani, ben: x.kullanici === okul.kullanici }; });
+  } },
+  kullaniciEkle: { f: function (g, okul) {
+    var k = kucuk_(g.kullanici), s = String(g.sifre || '');
+    if (!/^[a-z0-9._-]{3,30}$/.test(k)) throw hata_('Kullanıcı adı 3-30 karakter olmalı; yalnız küçük harf (Türkçe karakter olmadan), rakam, nokta, tire.');
+    if (s.length < 6) throw hata_('Şifre en az 6 karakter olmalı.');
+    if (satirlar_('Okullar').some(function (x) { return x.kullanici === k; })) throw hata_('Bu kullanıcı adı alınmış.');
+    var tuz = id_() + id_();
+    ekle_('Okullar', { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: k, sifreOzet: ozet_(s, tuz), tuz: tuz, kayitZamani: new Date().toISOString() });
+    return ISLEMLER.kullanicilar.f(g, okul);
+  } },
+  kullaniciSil: { f: function (g, okul) {
+    var k = kucuk_(g.kullanici); if (k === okul.kullanici) throw hata_('Kendi hesabınızı silemezsiniz.');
+    var x = satirlar_('Okullar').filter(function (y) { return y.okulId === okul.okulId && y.kullanici === k; })[0]; if (!x) throw hata_('Kullanıcı bulunamadı.');
+    sil_('Okullar', [x._satir]);
+    sil_('Oturumlar', satirlar_('Oturumlar').filter(function (y) { return y.okulId === okul.okulId && y.kullanici === k; }).map(function (y) { return y._satir; }));
+    return ISLEMLER.kullanicilar.f(g, okul);
   } },
   sifreDegistir: { f: function (g, okul) {
     if (ozet_(String(g.eski || ''), okul.tuz) !== okul.sifreOzet) throw hata_('Mevcut şifre hatalı.');

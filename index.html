@@ -154,6 +154,16 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
         </form>
         <div class="hata" id="sifreHata"></div>
         <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+        <h3 style="margin:0 0 4px">Okulun kullanıcıları</h3>
+        <div class="not">Aynı okula idareci, koordinatör ya da öğretmen için ayrı giriş açabilirsiniz; hepsi aynı listeyi ve dekontları görür.</div>
+        <ul id="kulListe" style="padding-left:18px"></ul>
+        <form id="fKul" onsubmit="event.preventDefault()">
+          <div class="izgara2"><label>Yeni kullanıcı adı<input name="kullanici" required placeholder="ör. yasin.yildiz" autocomplete="off"></label>
+          <label>Şifresi<input name="sifre" type="password" minlength="6" required autocomplete="new-password"></label></div>
+          <div class="dugmeler"><button class="btn ana">Kullanıcı ekle</button></div>
+        </form>
+        <div class="hata" id="kulHata"></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
         <button class="btn tehlike" id="cikisBtn">Çıkış yap</button>
         <p class="not">Ortak bir bilgisayardaysanız işiniz bitince çıkış yapın; çıkışta bu bilgisayardaki kulüp verileri temizlenir.</p>
       </div>
@@ -238,6 +248,18 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     try { await api("sifreDegistir", { eski: f.get("eski"), yeni: f.get("yeni") }); e.target.reset(); $("#sifreHata").textContent = "Şifre değiştirildi."; } catch (x) { $("#sifreHata").textContent = x.message; }
   };
 
+  function kulCiz(L) {
+    $("#kulListe").innerHTML = L.map((k) => `<li><b>${esc(k.kullanici)}</b>${k.ben ? " (siz)" : ` <button class="btn kucuk tehlike" data-ksil="${esc(k.kullanici)}">Sil</button>`}</li>`).join("");
+    document.querySelectorAll("[data-ksil]").forEach((b) => b.onclick = async () => {
+      if (!confirm(b.dataset.ksil + " kullanıcısı silinsin mi?")) return;
+      try { kulCiz(await api("kullaniciSil", { kullanici: b.dataset.ksil })); } catch (x) { $("#kulHata").textContent = x.message; }
+    });
+  }
+  $("#fKul").onsubmit = async (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    try { kulCiz(await api("kullaniciEkle", { kullanici: f.get("kullanici"), sifre: f.get("sifre") })); e.target.reset(); $("#kulHata").textContent = "Kullanıcı eklendi."; } catch (x) { $("#kulHata").textContent = x.message; }
+  };
+
   async function baslat() {
     $("#giris").hidden = true; $("#uyg").hidden = false;
     $("#okulAdi").textContent = "· " + oturum.okul.okulAdi; $("#hesapBaslik").textContent = `${oturum.okul.okulAdi} (${oturum.okul.kullanici})`;
@@ -247,6 +269,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
       HESAP_ANAHTAR.forEach((k) => { if (veri[k]) ls.set(k, veri[k]); });
       sonKayit = hesapAnlik();
       ogrCiz(); dekCiz();
+      api("kullanicilar", {}, true).then(kulCiz).catch(() => {});
     } catch (x) { alert(x.message); }
   }
 
