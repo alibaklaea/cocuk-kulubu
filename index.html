@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Çocuk Kulübü Uygulaması</title>
+<style>
+:root{
+  --paper:#f4f1ea; --card:#fffdf9; --ink:#17202a; --mut:#6b7280; --line:#e3ddd0; --line2:#cfc7b6;
+  --brand:#0e5a57; --brand-d:#0a3f3d; --brand-l:#e3f0ee; --gold:#d98e1f; --gold-l:#fbf0da;
+  --ok:#14794f; --ok-l:#e1f3ea; --warn:#b4540a; --warn-l:#fdeedd; --bad:#b42318; --bad-l:#fdecea; --field:#fff; --thead:#faf7f0; --r:12px;
+  --shadow:0 1px 2px rgba(23,32,42,.06),0 6px 20px rgba(23,32,42,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#14181a;--card:#1c2224;--ink:#e8ecea;--mut:#9aa6a3;--line:#2c3436;--line2:#3a4548;--brand:#2a8a85;--brand-d:#bfe6e1;--brand-l:#1d3a38;--gold-l:#3a2d12;--ok:#4ac08b;--ok-l:#17372b;--warn:#f0a35c;--warn-l:#3a2a14;--bad:#f28b82;--bad-l:#3b1d1b;--field:#232b2d;--thead:#222a2c}}
+:root[data-theme="dark"]{--paper:#14181a;--card:#1c2224;--ink:#e8ecea;--mut:#9aa6a3;--line:#2c3436;--line2:#3a4548;--brand:#2a8a85;--brand-d:#bfe6e1;--brand-l:#1d3a38;--gold-l:#3a2d12;--ok:#4ac08b;--ok-l:#17372b;--warn:#f0a35c;--warn-l:#3a2a14;--bad:#f28b82;--bad-l:#3b1d1b;--field:#232b2d;--thead:#222a2c}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:14px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{background:var(--field);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card);border-radius:9px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--brand)}
+.btn.ana{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.kucuk{padding:4px 10px;font-size:12.5px}
+.btn.tehlike{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.kart{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.not{color:var(--mut);font-size:13px}
+.hata{color:var(--bad);font-weight:600;min-height:1.4em;margin-top:8px}
+/* giriş */
+#giris{min-height:100%;display:grid;place-items:center;padding:24px 16px}
+#giris .kart{width:min(420px,100%)}
+#giris h1{margin:0 0 2px;font-size:22px;color:var(--brand-d)}
+.sekme{display:flex;gap:4px;margin:16px 0 4px;border-bottom:1px solid var(--line)}
+.sekme button{border:0;background:none;padding:8px 12px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.sekme button[aria-selected="true"]{color:var(--brand-d);border-color:var(--brand)}
+/* uygulama */
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--brand);color:#fff;flex-wrap:wrap}
+header b{font-size:16px}
+header .okul{opacity:.9;font-size:13px}
+header nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+header nav button{background:transparent;border:0;color:#fff;padding:7px 12px;border-radius:8px;font-weight:600;cursor:pointer;opacity:.85}
+header nav button[aria-selected="true"]{background:rgba(255,255,255,.18);opacity:1}
+main{padding:18px;max-width:1300px;margin:0 auto}
+.bolum[hidden]{display:none!important}
+.ozet{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.ozet div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.ozet b{display:block;font-size:22px}
+.ozet span{color:var(--mut);font-size:12.5px}
+.arac{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.arac input,.arac select{width:auto;min-width:160px}
+.tablo-kap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:var(--thead);text-align:left;font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.rozet{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.rozet.ok{background:var(--ok-l);color:var(--ok)}
+.rozet.bekle{background:var(--warn-l);color:var(--warn)}
+.rozet.yok{background:var(--bad-l);color:var(--bad)}
+.birak{border:2px dashed var(--line2);border-radius:var(--r);padding:28px;text-align:center;background:var(--card);cursor:pointer}
+.birak.ust{border-color:var(--brand);background:var(--brand-l)}
+.sonuc{margin-top:12px;display:grid;gap:8px}
+.sonuc div{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.sonuc .ok{border-color:var(--ok)} .sonuc .bekle{border-color:var(--warn)} .sonuc .yok{border-color:var(--bad)}
+#hesapCerceve{width:100%;height:calc(100vh - 140px);border:1px solid var(--line);border-radius:var(--r);background:var(--card)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(560px,94vw);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.izgara2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.dugmeler{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.yukleniyor{position:fixed;inset:auto 16px 16px auto;background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:10px;font-weight:600;z-index:9}
+pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:8px;border-radius:8px;max-height:160px;overflow:auto}
+@media (max-width:640px){main{padding:12px}.izgara2{grid-template-columns:1fr}header nav{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+
+<!-- giriş / kayıt -->
+<section id="giris" hidden>
+  <div class="kart">
+    <h1>Çocuk Kulübü Uygulaması</h1>
+    <div class="not">Ücret hesaplama, evrak, öğrenci listesi ve dekont takibi. Her okul yalnızca kendi verisini görür.</div>
+    <div class="sekme" role="tablist"><button data-gs="giris" aria-selected="true">Giriş</button><button data-gs="kayit" aria-selected="false">Okul kaydı</button></div>
+    <form id="fGiris">
+      <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required></label>
+      <label>Şifre<input name="sifre" type="password" autocomplete="current-password" required></label>
+      <div class="dugmeler"><button class="btn ana">Giriş yap</button></div>
+    </form>
+    <form id="fKayit" hidden>
+      <label>Kayıt kodu<input name="kayitKodu" required placeholder="Kulüp koordinatöründen alın"></label>
+      <label>Okul adı<input name="okulAdi" required placeholder="ör. Bucuk İlkokulu"></label>
+      <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required placeholder="ör. bucuk.ilkokulu"></label>
+      <div class="not">Küçük harf, Türkçe karakter olmadan; rakam, nokta ve tire kullanılabilir.</div>
+      <label>Şifre (en az 6 karakter)<input name="sifre" type="password" autocomplete="new-password" minlength="6" required></label>
+      <label>Şifre (tekrar)<input name="sifre2" type="password" autocomplete="new-password" minlength="6" required></label>
+      <div class="dugmeler"><button class="btn ana">Okulu kaydet</button></div>
+    </form>
+    <div class="hata" id="girisHata"></div>
+  </div>
+</section>
+
+<!-- uygulama -->
+<section id="uyg" hidden>
+  <header>
+    <div><b>Çocuk Kulübü</b> <span class="okul" id="okulAdi"></span></div>
+    <nav role="tablist">
+      <button data-b="ogrenci" aria-selected="true">Öğrenci Listesi</button>
+      <button data-b="dekont" aria-selected="false">Dekontlar</button>
+      <button data-b="hesap" aria-selected="false">Hesaplama ve Evrak</button>
+      <button data-b="hesapim" aria-selected="false">Hesabım</button>
+    </nav>
+  </header>
+  <main>
+    <div class="bolum" id="b-ogrenci">
+      <div class="ozet" id="ozet"></div>
+      <div class="arac">
+        <input id="ara" type="search" placeholder="Öğrenci ya da veli tel ara…">
+        <select id="fDurum"><option value="">Tüm öğrenciler</option><option>Ödendi</option><option>Ödenmedi</option></select>
+        <select id="fDers"><option value="">Tüm dersler</option></select>
+        <span style="flex:1"></span>
+        <button class="btn ana" id="yeniOgr">+ Öğrenci ekle</button>
+        <button class="btn" id="aktarBtn">Excel'den aktar</button>
+        <button class="btn" id="disaBtn">Excel'e indir</button>
+        <input type="file" id="aktarDosya" accept=".xlsx,.xls,.csv" hidden>
+      </div>
+      <div class="tablo-kap"><table><thead><tr><th>#</th><th>Ad Soyad</th><th>Sınıf</th><th>Şube</th><th>Veli tel</th><th>Ders(ler)</th><th>Ücret</th><th>Durum</th><th>Dekont no</th><th>Ödeme tarihi</th><th>Tutar</th><th>Not</th><th></th></tr></thead><tbody id="ogrTablo"></tbody></table></div>
+      <p class="not">Excel'den aktarırken ilk satır başlık olmalı. Tanınan başlıklar: Ad Soyad (ya da Öğrenci), Sınıf, Şube, Veli Tel (ya da Telefon), Ders (ya da Kurs), Ücret. Aynı ad ve sınıftaki öğrenci tekrar eklenmez, bilgileri güncellenir.</p>
+    </div>
+
+    <div class="bolum" id="b-dekont" hidden>
+      <label class="birak" id="birak"><input type="file" id="dekDosya" accept=".pdf,image/*" multiple hidden>
+        <b>Dekontları buraya bırakın ya da seçmek için tıklayın</b><br><span class="not">PDF ya da fotoğraf (JPG, PNG). Birden çok dosya seçilebilir. Dekont Google ile okunur, öğrenci bulunur ve listede "Ödendi" olarak işaretlenir. Dosyanın kendisi saklanmaz.</span></label>
+      <div class="sonuc" id="dekSonuc"></div>
+      <h3>Yüklenen dekontlar</h3>
+      <div class="tablo-kap"><table><thead><tr><th>Durum</th><th>Tarih</th><th>Dekont no</th><th>Tutar</th><th>Gönderen</th><th>Açıklama</th><th>Öğrenci</th><th></th></tr></thead><tbody id="dekTablo"></tbody></table></div>
+      <p class="not">"Kontrol bekliyor" olan dekontlarda öğrenci adı bulunamamış ya da birden çok öğrenciye benziyordur. "Öğrenci seç" ile elle eşleştirin.</p>
+    </div>
+
+    <div class="bolum" id="b-hesap" hidden>
+      <iframe id="hesapCerceve" title="Hesaplama ve evrak"></iframe>
+      <p class="not" id="esitDurum">Hesaplama verileri okulunuzun hesabına otomatik kaydedilir.</p>
+    </div>
+
+    <div class="bolum" id="b-hesapim" hidden>
+      <div class="kart" style="max-width:460px">
+        <h3 style="margin-top:0" id="hesapBaslik"></h3>
+        <form id="fSifre">
+          <label>Mevcut şifre<input name="eski" type="password" autocomplete="current-password" required></label>
+          <label>Yeni şifre<input name="yeni" type="password" autocomplete="new-password" minlength="6" required></label>
+          <div class="dugmeler"><button class="btn ana">Şifreyi değiştir</button></div>
+        </form>
+        <div class="hata" id="sifreHata"></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+        <button class="btn tehlike" id="cikisBtn">Çıkış yap</button>
+        <p class="not">Ortak bir bilgisayardaysanız işiniz bitince çıkış yapın; çıkışta bu bilgisayardaki kulüp verileri temizlenir.</p>
+      </div>
+    </div>
+  </main>
+</section>
+
+<dialog id="ogrDlg"><form method="dialog" id="fOgr">
+  <h3 style="margin-top:0" id="ogrDlgBaslik">Öğrenci</h3>
+  <input type="hidden" name="ogrId">
+  <label>Ad Soyad<input name="adSoyad" required></label>
+  <div class="izgara2"><label>Sınıf<input name="sinif" placeholder="ör. 3. Sınıf"></label><label>Şube<input name="sube"></label>
+    <label>Veli tel<input name="veliTel" inputmode="tel"></label><label>Ücret (TL)<input name="ucret" inputmode="decimal"></label></div>
+  <label>Ders(ler)<input name="dersler" placeholder="ör. Satranç, Matematik-1"></label>
+  <div class="izgara2"><label>Durum<select name="durum"><option>Ödenmedi</option><option>Ödendi</option></select></label><label>Dekont no<input name="dekontNo"></label>
+    <label>Ödeme tarihi<input name="odemeTarihi" placeholder="gg.aa.yyyy"></label><label>Tutar<input name="tutar"></label></div>
+  <label>Not<input name="not"></label>
+  <div class="dugmeler"><button class="btn" value="iptal" formnovalidate>Vazgeç</button><button class="btn ana" value="kaydet">Kaydet</button></div>
+</form></dialog>
+
+<dialog id="ataDlg"><form method="dialog" id="fAta">
+  <h3 style="margin-top:0">Dekontu öğrenciyle eşleştir</h3>
+  <div id="ataBilgi" class="not"></div>
+  <label>Öğrenci(ler) <span class="not">(kardeşler için birden çok seçilebilir: Ctrl tuşuyla)</span><select name="ogr" multiple size="8" id="ataSec"></select></label>
+  <input type="search" id="ataAra" placeholder="Listede ara…" style="margin-top:6px">
+  <div class="izgara2"><label>Dekont no<input name="dekontNo"></label><label>Tarih<input name="tarih"></label><label>Tutar<input name="tutar"></label></div>
+  <div class="dugmeler"><button class="btn" value="iptal" formnovalidate>Vazgeç</button><button class="btn ana" value="kaydet">Eşleştir</button></div>
+</form></dialog>
+
+<div class="yukleniyor" id="yuk" hidden></div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  const API = (window.KULUP_AYAR || {}).API_URL || "";
+  const HESAP_ANAHTAR = ["bucuk-ogretmen-v1", "bucuk-ogretmen-okul", "bucuk-cocuk-kulubu-okul"];
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }, del: (k) => { try { localStorage.removeItem(k); } catch (e) {} } };
+  let oturum = JSON.parse(ls.get("kulup.oturum") || "null"), OGR = [], DEK = [];
+
+  function yuk(m) { const y = $("#yuk"); y.hidden = !m; y.textContent = m || ""; }
+  async function api(islem, veri = {}, sessiz) {
+    if (!API) throw new Error("Uygulama henüz bağlanmadı (config.js içinde API_URL boş).");
+    if (!sessiz) yuk("İşleniyor…");
+    try {
+      const r = await fetch(API, { method: "POST", body: JSON.stringify({ islem, token: oturum && oturum.token, ...veri }) });
+      const j = await r.json();
+      if (!j.ok) { if (/Oturum/.test(j.hata) && islem !== "giris" && islem !== "kayit") { cikisYerel(); } throw new Error(j.hata); }
+      return j.veri;
+    } finally { if (!sessiz) yuk(""); }
+  }
+
+  // ---------- giriş ----------
+  document.querySelectorAll("[data-gs]").forEach((b) => b.onclick = () => {
+    document.querySelectorAll("[data-gs]").forEach((x) => x.setAttribute("aria-selected", x === b));
+    $("#fGiris").hidden = b.dataset.gs !== "giris"; $("#fKayit").hidden = b.dataset.gs !== "kayit"; $("#girisHata").textContent = "";
+  });
+  $("#fGiris").onsubmit = async (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    try { girisTamam(await api("giris", { kullanici: f.get("kullanici"), sifre: f.get("sifre") })); } catch (x) { $("#girisHata").textContent = x.message; }
+  };
+  $("#fKayit").onsubmit = async (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    if (f.get("sifre") !== f.get("sifre2")) { $("#girisHata").textContent = "Şifreler aynı değil."; return; }
+    try { girisTamam(await api("kayit", { kayitKodu: f.get("kayitKodu"), okulAdi: f.get("okulAdi"), kullanici: f.get("kullanici"), sifre: f.get("sifre") })); } catch (x) { $("#girisHata").textContent = x.message; }
+  };
+  async function girisTamam(o) {
+    HESAP_ANAHTAR.forEach(ls.del); // önceki okulun hesaplama verisi kalmasın
+    oturum = o; ls.set("kulup.oturum", JSON.stringify(o));
+    await baslat();
+  }
+  function cikisYerel() {
+    HESAP_ANAHTAR.forEach(ls.del); ls.del("kulup.oturum"); oturum = null; OGR = []; DEK = [];
+    $("#hesapCerceve").src = "about:blank"; $("#uyg").hidden = true; $("#giris").hidden = false;
+  }
+  $("#cikisBtn").onclick = async () => { try { await hesapKaydet(); await api("cikis"); } catch (e) {} cikisYerel(); };
+  $("#fSifre").onsubmit = async (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    try { await api("sifreDegistir", { eski: f.get("eski"), yeni: f.get("yeni") }); e.target.reset(); $("#sifreHata").textContent = "Şifre değiştirildi."; } catch (x) { $("#sifreHata").textContent = x.message; }
+  };
+
+  async function baslat() {
+    $("#giris").hidden = true; $("#uyg").hidden = false;
+    $("#okulAdi").textContent = "· " + oturum.okul.okulAdi; $("#hesapBaslik").textContent = `${oturum.okul.okulAdi} (${oturum.okul.kullanici})`;
+    try {
+      const [ogr, dek, veri] = await Promise.all([api("ogrenciler", {}, true), api("dekontlar", {}, true), api("veriGetir", {}, true)]);
+      OGR = ogr; DEK = dek;
+      HESAP_ANAHTAR.forEach((k) => { if (veri[k]) ls.set(k, veri[k]); });
+      sonKayit = hesapAnlik();
+      ogrCiz(); dekCiz();
+    } catch (x) { alert(x.message); }
+  }
+
+  // ---------- sekmeler ----------
+  document.querySelectorAll("[data-b]").forEach((b) => b.onclick = () => {
+    document.querySelectorAll("[data-b]").forEach((x) => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll(".bolum").forEach((s) => s.hidden = s.id !== "b-" + b.dataset.b);
+    if (b.dataset.b === "hesap" && !/hesaplama\.html/.test($("#hesapCerceve").src)) $("#hesapCerceve").src = "hesaplama.html";
+  });
+
+  // ---------- hesaplama verisinin eşitlenmesi ----------
+  let sonKayit = "";
+  const hesapAnlik = () => JSON.stringify(HESAP_ANAHTAR.map((k) => ls.get(k)));
+  async function hesapKaydet() {
+    if (!oturum) return; const a = hesapAnlik(); if (a === sonKayit) return;
+    const kayitlar = {}; HESAP_ANAHTAR.forEach((k) => { const v = ls.get(k); if (v !== null) kayitlar[k] = v; });
+    await api("veriKaydet", { kayitlar }, true); sonKayit = a;
+    $("#esitDurum").textContent = "Hesaplama verileri kaydedildi · " + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  }
+  setInterval(() => { hesapKaydet().catch((e) => { $("#esitDurum").textContent = "Kaydedilemedi: " + e.message; }); }, 8000);
+  window.addEventListener("pagehide", () => { if (oturum && hesapAnlik() !== sonKayit) { const kayitlar = {}; HESAP_ANAHTAR.forEach((k) => { const v = ls.get(k); if (v !== null) kayitlar[k] = v; });
+    navigator.sendBeacon && navigator.sendBeacon(API, JSON.stringify({ islem: "veriKaydet", token: oturum.token, kayitlar })); } });
+
+  // ---------- öğrenci listesi ----------
+  const sayi = (s) => { const t = String(s || "").replace(/[^\d,.-]/g, ""); if (!t) return 0; const n = /,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, ""); return parseFloat(n) || 0; };
+  const tl = (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TL";
+  function dersler() { return [...new Set(OGR.flatMap((o) => String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean)))].sort((a, b) => a.localeCompare(b, "tr")); }
+  function ogrCiz() {
+    const ara = $("#ara").value.toLocaleLowerCase("tr"), fd = $("#fDurum").value, fs = $("#fDers").value;
+    const sec = $("#fDers").value; $("#fDers").innerHTML = '<option value="">Tüm dersler</option>' + dersler().map((d) => `<option ${d === sec ? "selected" : ""}>${esc(d)}</option>`).join("");
+    const L = OGR.filter((o) => (!ara || (o.adSoyad + " " + o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || o.durum === fd) && (!fs || String(o.dersler).split(/\s*[,;/]\s*/).includes(fs)))
+      .sort((a, b) => String(a.sinif).localeCompare(String(b.sinif), "tr") || String(a.adSoyad).localeCompare(String(b.adSoyad), "tr"));
+    const od = OGR.filter((o) => o.durum === "Ödendi");
+    $("#ozet").innerHTML = `<div><b>${OGR.length}</b><span>Kayıtlı öğrenci</span></div><div><b style="color:var(--ok)">${od.length}</b><span>Ödendi</span></div>
+      <div><b style="color:var(--bad)">${OGR.length - od.length}</b><span>Ödenmedi</span></div><div><b>${tl(od.reduce((s, o) => s + sayi(o.tutar), 0))}</b><span>Dekontlardaki toplam</span></div>
+      <div><b>${DEK.filter((d) => /Kontrol/.test(d.durum)).length}</b><span>Kontrol bekleyen dekont</span></div>`;
+    $("#ogrTablo").innerHTML = L.length ? L.map((o, i) => `<tr><td>${i + 1}</td><td><b>${esc(o.adSoyad)}</b></td><td>${esc(o.sinif)}</td><td>${esc(o.sube)}</td><td>${esc(o.veliTel)}</td><td>${esc(o.dersler)}</td><td>${esc(o.ucret)}</td>
+      <td><span class="rozet ${o.durum === "Ödendi" ? "ok" : "yok"}">${esc(o.durum || "Ödenmedi")}</span></td><td>${esc(o.dekontNo)}</td><td>${esc(o.odemeTarihi)}</td><td>${esc(o.tutar)}</td><td>${esc(o.not)}</td>
+      <td style="white-space:nowrap"><button class="btn kucuk" data-duz="${esc(o.ogrId)}">Düzenle</button> <button class="btn kucuk tehlike" data-sil="${esc(o.ogrId)}">Sil</button></td></tr>`).join("")
+      : `<tr><td colspan="13" class="not" style="padding:20px;text-align:center">${OGR.length ? "Aramaya uyan öğrenci yok." : "Henüz öğrenci yok. “Excel'den aktar” ile listenizi yükleyin ya da “Öğrenci ekle” ile tek tek ekleyin."}</td></tr>`;
+    document.querySelectorAll("[data-duz]").forEach((b) => b.onclick = () => ogrDuzenle(OGR.find((o) => o.ogrId === b.dataset.duz)));
+    document.querySelectorAll("[data-sil]").forEach((b) => b.onclick = async () => {
+      const o = OGR.find((x) => x.ogrId === b.dataset.sil); if (!confirm(o.adSoyad + " listeden silinsin mi?")) return;
+      try { OGR = await api("ogrenciSil", { ogrIdler: [o.ogrId] }); ogrCiz(); } catch (x) { alert(x.message); }
+    });
+  }
+  ["#ara", "#fDurum", "#fDers"].forEach((s) => $(s).addEventListener("input", ogrCiz));
+  function ogrDuzenle(o) {
+    const f = $("#fOgr"); f.reset(); $("#ogrDlgBaslik").textContent = o ? "Öğrenciyi düzenle" : "Yeni öğrenci";
+    ["ogrId", "adSoyad", "sinif", "sube", "veliTel", "ucret", "dersler", "durum", "dekontNo", "odemeTarihi", "tutar", "not"].forEach((k) => { if (f[k]) f[k].value = (o && o[k]) || (k === "durum" ? "Ödenmedi" : ""); });
+    $("#ogrDlg").showModal();
+  }
+  $("#yeniOgr").onclick = () => ogrDuzenle(null);
+  $("#ogrDlg").addEventListener("close", async () => {
+    if ($("#ogrDlg").returnValue !== "kaydet") return;
+    const f = new FormData($("#fOgr")), o = Object.fromEntries(f.entries());
+    try { OGR = await api("ogrenciKaydet", { ogrenci: o }); ogrCiz(); } catch (x) { alert(x.message); }
+  });
+
+  // Excel aktar / indir
+  const BASLIK = { adSoyad: /ad.*soyad|öğrenci|ogrenci|isim/i, sinif: /^sınıf|^sinif|sınıfı/i, sube: /şube|sube/i, veliTel: /tel|telefon|gsm/i, dersler: /ders|kurs|branş/i, ucret: /ücret|ucret|tutar/i };
+  $("#aktarBtn").onclick = () => $("#aktarDosya").click();
+  $("#aktarDosya").onchange = async (e) => {
+    const d = e.target.files[0]; e.target.value = ""; if (!d) return;
+    try {
+      const wb = XLSX.read(await d.arrayBuffer()), sat = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: "" });
+      const bi = sat.findIndex((r) => r.some((c) => BASLIK.adSoyad.test(String(c)))); if (bi < 0) throw new Error("Başlık satırı bulunamadı. İlk satırda “Ad Soyad” sütunu olmalı.");
+      const b = sat[bi].map(String), sutun = {};
+      Object.entries(BASLIK).forEach(([k, re]) => { const i = b.findIndex((h, j) => re.test(h) && !Object.values(sutun).includes(j)); if (i >= 0) sutun[k] = i; });
+      const L = sat.slice(bi + 1).map((r) => { const o = {}; Object.entries(sutun).forEach(([k, i]) => o[k] = String(r[i] || "").trim()); return o; }).filter((o) => o.adSoyad && !/^\d+$/.test(o.adSoyad));
+      if (!L.length) throw new Error("Dosyada öğrenci bulunamadı.");
+      if (!confirm(`${L.length} öğrenci aktarılacak. Tanınan sütunlar: ${Object.keys(sutun).join(", ")}. Devam edilsin mi?`)) return;
+      const r = await api("ogrenciAktar", { ogrenciler: L }); OGR = r.liste; ogrCiz(); alert(`${r.yeni} öğrenci eklendi, ${r.guncellenen} öğrenci güncellendi.`);
+    } catch (x) { alert(x.message); }
+  };
+  $("#disaBtn").onclick = () => {
+    const B = ["Ad Soyad", "Sınıf", "Şube", "Veli Tel", "Ders(ler)", "Ücret", "Durum", "Dekont No", "Ödeme Tarihi", "Tutar", "Not"], K = ["adSoyad", "sinif", "sube", "veliTel", "dersler", "ucret", "durum", "dekontNo", "odemeTarihi", "tutar", "not"];
+    const ws = XLSX.utils.aoa_to_sheet([B, ...OGR.map((o) => K.map((k) => o[k] || ""))]), wb = XLSX.utils.book_new();
+    ws["!cols"] = B.map((b, i) => ({ wch: i === 0 ? 28 : 14 })); XLSX.utils.book_append_sheet(wb, ws, "Öğrenciler");
+    XLSX.writeFile(wb, `${oturum.okul.okulAdi} - Öğrenci ve Ödeme Listesi.xlsx`);
+  };
+
+  // ---------- dekontlar ----------
+  const birak = $("#birak");
+  ["dragenter", "dragover"].forEach((t) => birak.addEventListener(t, (e) => { e.preventDefault(); birak.classList.add("ust"); }));
+  ["dragleave", "drop"].forEach((t) => birak.addEventListener(t, (e) => { e.preventDefault(); birak.classList.remove("ust"); }));
+  birak.addEventListener("drop", (e) => dekYukle([...e.dataTransfer.files]));
+  $("#dekDosya").onchange = (e) => { dekYukle([...e.target.files]); e.target.value = ""; };
+  function okuB64(blob) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = no; r.readAsDataURL(blob); }); }
+  async function kucult(d) { // fotoğraflar daha hızlı gitsin: en uzun kenar 2200 px
+    if (!/^image\//.test(d.type)) return d;
+    const img = await createImageBitmap(d), o = Math.min(1, 2200 / Math.max(img.width, img.height));
+    if (o === 1 && d.size < 2.5e6) return d;
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * o); c.height = Math.round(img.height * o); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((ok) => c.toBlob(ok, "image/jpeg", .9));
+  }
+  const ogrAd = (ids) => String(ids || "").split(",").filter(Boolean).map((id) => (OGR.find((o) => o.ogrId === id) || {}).adSoyad || "?").join(", ");
+  async function dekYukle(dosyalar) {
+    const S = $("#dekSonuc");
+    for (let i = 0; i < dosyalar.length; i++) {
+      const d = dosyalar[i]; yuk(`Dekont okunuyor ${i + 1}/${dosyalar.length}: ${d.name}`);
+      const kutu = document.createElement("div"); kutu.textContent = d.name + " · okunuyor…"; S.prepend(kutu);
+      try {
+        if (!/pdf|image/.test(d.type)) throw new Error("Yalnız PDF ya da fotoğraf yüklenebilir.");
+        const k = await kucult(d); if (k.size > 12e6) throw new Error("Dosya çok büyük (12 MB üstü).");
+        const r = await api("dekontYukle", { dosya: await okuB64(k), tur: k.type || d.type, ad: d.name }, true);
+        if (r.yinelenen) { kutu.className = "yok"; kutu.innerHTML = `<b>${esc(d.name)}</b>: Bu dekont daha önce yüklenmiş (dekont no ${esc(r.bilgi.dekontNo)}). Tekrar işlenmedi.`; continue; }
+        OGR = r.liste; DEK = r.dekontlar; const x = r.dekont;
+        if (x.ogrIdler) { kutu.className = "ok"; kutu.innerHTML = `✔ <b>${esc(ogrAd(x.ogrIdler))}</b>: Ödendi olarak işaretlendi · Dekont no ${esc(x.dekontNo || "okunamadı")} · ${esc(x.tarih)} · ${esc(x.tutar)} TL <span class="not">(${esc(d.name)})</span>`; }
+        else { kutu.className = "bekle"; kutu.innerHTML = `⚠ <b>${esc(d.name)}</b>: Öğrenci kesin bulunamadı. Aşağıdaki listede “Öğrenci seç” ile eşleştirin.${x.aciklama ? " Açıklama: “" + esc(x.aciklama) + "”" : ""}${r.metin ? `<details><summary class="not">Okunan metin</summary><pre class="metin">${esc(r.metin)}</pre></details>` : ""}`; }
+      } catch (x) { kutu.className = "yok"; kutu.innerHTML = `<b>${esc(d.name)}</b>: ${esc(x.message)}`; }
+      ogrCiz(); dekCiz();
+    }
+    yuk("");
+  }
+  function dekCiz() {
+    $("#dekTablo").innerHTML = DEK.length ? DEK.map((d) => `<tr><td><span class="rozet ${/Eşleşti/.test(d.durum) ? "ok" : "bekle"}">${esc(d.durum)}</span></td><td>${esc(d.tarih)}</td><td>${esc(d.dekontNo)}</td><td>${esc(d.tutar)}</td>
+      <td>${esc(d.gonderen)}</td><td>${esc(d.aciklama)}</td><td><b>${esc(ogrAd(d.ogrIdler))}</b>${!d.ogrIdler && d.adaylar ? `<div class="not">Olası: ${esc(ogrAd(d.adaylar))}</div>` : ""}</td>
+      <td style="white-space:nowrap"><button class="btn kucuk${d.ogrIdler ? "" : " ana"}" data-ata="${esc(d.dekId)}">${d.ogrIdler ? "Düzelt" : "Öğrenci seç"}</button> <button class="btn kucuk tehlike" data-dsil="${esc(d.dekId)}">Sil</button></td></tr>`).join("")
+      : `<tr><td colspan="8" class="not" style="padding:20px;text-align:center">Henüz dekont yüklenmedi.</td></tr>`;
+    document.querySelectorAll("[data-ata]").forEach((b) => b.onclick = () => ataAc(DEK.find((d) => d.dekId === b.dataset.ata)));
+    document.querySelectorAll("[data-dsil]").forEach((b) => b.onclick = async () => {
+      if (!confirm("Dekont silinsin mi? Eşleştiği öğrencinin ödemesi de geri alınır.")) return;
+      try { const r = await api("dekontSil", { dekId: b.dataset.dsil }); OGR = r.liste; DEK = r.dekontlar; ogrCiz(); dekCiz(); } catch (x) { alert(x.message); }
+    });
+  }
+  let ataDek = null;
+  function ataAc(d) {
+    ataDek = d; const f = $("#fAta"), aday = String(d.adaylar || "").split(",").filter(Boolean), sec = String(d.ogrIdler || "").split(",").filter(Boolean);
+    $("#ataBilgi").innerHTML = `Gönderen: <b>${esc(d.gonderen || "?")}</b> · Açıklama: <b>${esc(d.aciklama || "?")}</b> · ${esc(d.tarih)} · ${esc(d.tutar)} TL`;
+    const sira = [...OGR].sort((a, b) => (aday.includes(b.ogrId) - aday.includes(a.ogrId)) || String(a.adSoyad).localeCompare(String(b.adSoyad), "tr"));
+    $("#ataSec").innerHTML = sira.map((o) => `<option value="${esc(o.ogrId)}" ${sec.includes(o.ogrId) || (!sec.length && aday.length === 1 && aday[0] === o.ogrId) ? "selected" : ""}>${aday.includes(o.ogrId) ? "★ " : ""}${esc(o.adSoyad)} · ${esc(o.sinif)} ${o.durum === "Ödendi" ? "(ödendi)" : ""}</option>`).join("");
+    f.dekontNo.value = d.dekontNo || ""; f.tarih.value = d.tarih || ""; f.tutar.value = d.tutar || ""; $("#ataAra").value = "";
+    $("#ataDlg").showModal();
+  }
+  $("#ataAra").oninput = (e) => { const q = e.target.value.toLocaleLowerCase("tr"); [...$("#ataSec").options].forEach((o) => o.hidden = q && !o.text.toLocaleLowerCase("tr").includes(q)); };
+  $("#ataDlg").addEventListener("close", async () => {
+    if ($("#ataDlg").returnValue !== "kaydet" || !ataDek) return;
+    const f = $("#fAta"), ids = [...$("#ataSec").selectedOptions].map((o) => o.value);
+    try { const r = await api("dekontAta", { dekId: ataDek.dekId, ogrIdler: ids, dekontNo: f.dekontNo.value, tarih: f.tarih.value, tutar: f.tutar.value }); OGR = r.liste; DEK = r.dekontlar; ogrCiz(); dekCiz(); } catch (x) { alert(x.message); }
+  });
+
+  // ---------- açılış ----------
+  if (oturum && oturum.token) baslat(); else { $("#giris").hidden = false; if (!API) $("#girisHata").textContent = "Uygulama henüz Google Drive'a bağlanmadı."; }
+})();
+</script>
+</body>
+</html>

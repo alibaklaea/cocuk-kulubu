@@ -1,0 +1,4 @@
+*.xlsx
+*.pdf
+.clasp.json
+node_modules/

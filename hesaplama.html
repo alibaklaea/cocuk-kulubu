@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Öğretmen Bazlı Evrak Atölyesi</title>
+<style>
+:root{
+  --paper:#f4f1ea; --card:#fffdf9; --ink:#17202a; --mut:#6b7280; --line:#e3ddd0; --line2:#cfc7b6;
+  --brand:#0e5a57; --brand-d:#0a3f3d; --brand-l:#e3f0ee; --gold:#d98e1f; --gold-l:#fbf0da;
+  --ok:#14794f; --warn:#b4540a; --r:12px; --on-brand-l:#0a3f3d; --ok-l:#e1f3ea; --field:#fff; --thead:#faf7f0; --stage:#ebe6da; --btn2:#fff;
+  --shadow:0 1px 2px rgba(23,32,42,.06),0 6px 20px rgba(23,32,42,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#14181a;--card:#1c2224;--ink:#e8ecea;--mut:#9aa6a3;--line:#2c3436;--line2:#3a4548;--brand-l:#1d3a38;--gold-l:#3a2d12;--on-brand-l:#bfe6e1;--ok-l:#17372b;--field:#232b2d;--thead:#222a2c;--stage:#10100f;--btn2:#232b2d;--brand:#247a76;--ok:#4ac08b;--warn:#f0a35c}}
+:root[data-theme="dark"]{--paper:#14181a;--card:#1c2224;--ink:#e8ecea;--mut:#9aa6a3;--line:#2c3436;--line2:#3a4548;--brand-l:#1d3a38;--gold-l:#3a2d12;--on-brand-l:#bfe6e1;--ok-l:#17372b;--field:#232b2d;--thead:#222a2c;--stage:#10100f;--btn2:#232b2d;--brand:#247a76;--ok:#4ac08b;--warn:#f0a35c}
+*{box-sizing:border-box}
+:root{color-scheme:light dark}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.top{background:linear-gradient(135deg,var(--brand-d),var(--brand));color:#fff;padding:22px clamp(16px,4vw,40px) 58px}
+.top .in{max-width:1500px;margin:auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{width:46px;height:46px;border-radius:12px;background:var(--gold);display:grid;place-items:center;font-weight:800;font-size:22px;color:#17202a;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
+.top h1{margin:0;font-size:clamp(18px,2.4vw,24px);letter-spacing:-.01em;font-weight:700}
+.top p{margin:2px 0 0;opacity:.8;font-size:13px}
+.wrap{max-width:1500px;margin:-36px auto 0;padding:0 clamp(16px,4vw,40px) 60px}
+.tabs{display:inline-flex;background:var(--card);border-radius:999px;padding:4px;box-shadow:var(--shadow);margin-bottom:18px;gap:2px}
+.tabs button{border:0;background:none;padding:9px 20px;border-radius:999px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer;transition:.15s}
+.tabs button.on{background:var(--brand);color:#fff}
+.tab{display:none}.tab.on{display:block}
+.layout{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}}
+.form{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 14px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);display:flex;align-items:center;gap:8px}
+.card h3 i{font-style:normal;width:22px;height:22px;border-radius:7px;background:var(--brand-l);display:grid;place-items:center;font-size:12px;letter-spacing:0}
+label{display:block;font-size:12px;color:var(--mut);margin:9px 0 3px;font-weight:500}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line2);border-radius:8px;font:inherit;background:var(--field);color:var(--ink);transition:border .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,90,87,.15)}
+input[readonly]{background:var(--brand-l);font-weight:600;color:var(--on-brand-l)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 12px}
+.btn{background:var(--brand);color:#fff;border:0;border-radius:9px;padding:9px 16px;cursor:pointer;font:inherit;font-weight:600;box-shadow:0 1px 0 rgba(0,0,0,.15);transition:.15s}
+.btn:hover{background:var(--brand-d)}
+.btn.sec{background:var(--btn2);color:var(--ink);border:1px solid var(--line2);box-shadow:none}
+.btn.sec:hover{background:var(--paper)}
+.btn.gold{background:var(--gold);color:#17202a}.btn.gold:hover{background:#b97812}
+.btn.sm{padding:5px 10px;font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--mut);margin:8px 0 0}
+.ok{color:var(--ok)}.warn{color:var(--warn)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--ok-l)}.pill.warn{background:var(--gold-l)}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:2px 0 4px}
+.stat div{background:var(--brand-l);border-radius:10px;padding:9px 12px}
+.stat b{display:block;font-size:17px;color:var(--on-brand-l);font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--mut)}
+.stage{background:var(--stage);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:18px;align-items:center;overflow:hidden}
+.stage .cap{align-self:flex-start;font-size:12px;color:var(--mut);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pg{position:relative}
+.pg .tag{position:absolute;top:-10px;left:12px;background:var(--ink);color:var(--paper);font-size:11px;padding:2px 9px;border-radius:99px;z-index:2}
+.pg-box{box-shadow:0 2px 4px rgba(0,0,0,.12),0 12px 30px rgba(0,0,0,.14);background:#fff}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left}
+table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);background:var(--thead)}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums}
+table.t td input,table.t td select{padding:5px 7px;font-size:12.5px}
+tr.tot td{font-weight:700;background:var(--brand-l);border-bottom:0}
+.scroll{overflow-x:auto}
+
+/* ===== A4 belgeler (yazdırılan kısım) ===== */
+.sheet{background:#fff;color:#000;font-family:"Times New Roman",Times,serif;overflow:hidden;position:relative}
+.sheet.port{width:210mm;height:297mm;padding:11mm 15mm;font-size:10.4pt;line-height:1.28;page:port}
+.sheet.land{width:297mm;height:210mm;padding:8mm 10mm;font-size:9pt;line-height:1.25;page:land}
+.sheet h2{font-size:12.5pt;text-align:center;margin:3px 0 7px;font-weight:700;letter-spacing:.01em}
+.sheet p{margin:0}
+.sheet .b{font-weight:700}.sheet .c{text-align:center}.sheet .r{text-align:right}
+.sheet .sec{font-weight:700;margin:7px 0 2px;font-size:10.4pt;border-bottom:1.2px solid #000;padding-bottom:1px}
+.sheet table{border-collapse:collapse;width:100%}
+.sheet td,.sheet th{vertical-align:middle}
+.k5 td{padding:1.5px 4px;border-bottom:1px dotted #555}
+.k5 td:first-child{width:62%}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.dot{display:inline-block;min-width:34mm;border-bottom:1px dotted #000;font-weight:700;padding:0 2px}
+.dot.s{min-width:18mm}.dot.w{min-width:52mm}
+.areas{columns:3;column-gap:10px;margin-top:2px}
+.areas div{break-inside:avoid;padding:0 2px 0}
+.sigrow{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:5mm}
+.sigbox{text-align:center;min-height:26mm}
+.sigbox .nm{display:block;margin-top:9mm;font-weight:700}
+.olur{width:80mm;margin:6mm auto 0;text-align:center}
+
+
+.sheet.ek1{font-size:9.8pt;line-height:1.2;padding:10mm 16mm}
+.ek1 h2{font-size:11pt;margin:2mm 0 2mm}
+.ek1 .sm{font-size:7.6pt}.ek1 .sm2{font-size:8.4pt;margin-top:2mm}
+.ek1 .h{margin-top:2.2mm}
+.ek1 .in{padding-left:3mm}
+.ek1 .dl{display:inline-block;min-width:60mm;border-bottom:1px dotted #000;padding:0 2px}
+.ek1 .dl.w{min-width:78mm}.ek1 .dl.m{min-width:50mm}.ek1 .dl.s{min-width:18mm}
+.ek1t{margin-top:.5mm}.ek1t td{padding:.4mm 0;width:60%}.ek1t td+td{width:40%;padding-left:4mm}
+.ek1 .rt{width:62mm;margin:2.5mm 0 0 auto;text-align:center}
+.ek1 .lt{width:70mm;text-align:center;margin-top:2mm}
+/* EK-3 tablo */
+.e3{border:1.4px solid #000}
+.e3 th,.e3 td{border:1px solid #000;padding:2px 4px;text-align:center}
+.e3 .hd{background:#f4b183;font-weight:700;font-size:9.5pt}
+.e3 .gr{background:#92d050;font-weight:600}
+.e3 .gy{background:#d9d9d9}
+.e3 .bl{background:#d6dce4;font-weight:700}
+.e3 .val{font-weight:700;font-size:11pt}
+.e3 .val.in{color:#00802b}
+.e3 td.l{text-align:left}.e3 td.rr{text-align:right;font-variant-numeric:tabular-nums}
+.e3title{display:grid;grid-template-columns:1fr 26mm;align-items:stretch;border:1.4px solid #000;border-bottom:0}
+.e3title div{padding:4px;text-align:center;font-weight:700}
+.e3title div:last-child{border-left:1.4px solid #000;display:grid;place-items:center;font-size:13pt}
+.nm-sm{display:block;font-weight:400;font-size:7.8pt;color:#222}
+.sheet.bord{font-size:9pt}
+.bd{border:1px solid #000}
+.bd th,.bd td{border:1px solid #000;padding:2px 5px}
+.bd th{background:#eee;font-size:8.3pt}
+.bd td.n{text-align:right;font-variant-numeric:tabular-nums}
+
+
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+input:focus,select:focus,textarea:focus{outline:2px solid transparent}
+.form,.card{min-width:0}
+.sheet{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media(max-width:560px){
+  .tabs{display:flex;width:100%}.tabs button{flex:1;padding:9px 8px}
+  .g2{grid-template-columns:1fr}.stage{padding:8px}
+  .top{padding-bottom:50px}
+}
+
+.bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.chip{border:1px solid var(--line2);background:var(--card);padding:8px 14px;border-radius:999px;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.chip.add{border-style:dashed;color:var(--brand);box-shadow:none}
+.chip.sep{margin-left:auto}
+.view{display:none}.view.on{display:block}
+#printArea{display:none}
+.ek1t2 td{width:50%!important;padding-left:0!important}.ek1 .dl.s2{min-width:44mm}
+@media print{
+  @page{margin:0}
+  @page port{size:A4 portrait;margin:0}
+  @page land{size:A4 landscape;margin:0}
+  body{background:#fff}
+  #app{display:none!important}
+  #printArea{display:block!important}
+  .sheet{overflow:hidden;break-after:page}
+  .sheet.port{height:296.5mm}.sheet.land{height:209.5mm}
+  .sheet:last-child{break-after:auto}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="top"><div class="in">
+  <div class="logo">ÇK</div>
+  <div><h1>Öğretmen Bazlı Evrak Atölyesi</h1><p>Her öğretmen için ayrı onay ve EK-3; sonunda tek toplam bordro. Bilgiler yalnızca bu tarayıcıda saklanır.</p></div>
+</div></div>
+
+<div class="wrap">
+<div class="bar" role="tablist" id="bar"></div>
+
+<!-- ============ OKUL ============ -->
+<section class="view" id="v-okul">
+<div class="layout">
+<div class="form">
+  <div class="card"><h3><i>🏫</i>Okul ve imza bilgileri</h3>
+    <label>Okul adı</label><input data-k="okul">
+    <label>Onay tarihi</label><input data-k="tarih" placeholder="gg.aa.yyyy">
+    <label>Olur makamı — Ad Soyad</label><input data-k="ilceMem">
+    <label>Olur makamı — Unvan</label><input data-k="olurUnvan">
+  </div>
+  <div class="card"><h3><i>👥</i>Yönetim kurulu</h3>
+    <label>Okul Müdürü</label><input data-k="mudur">
+    <label>Müdür Yardımcısı</label><input data-k="mudyrd">
+    <label>Öğretmen / Koordinatör Öğretmen (kurul üyesi)</label><input data-k="koord">
+    <div class="g2"><div><label>Okul Aile Birliği üyesi</label><input data-k="oab"></div>
+    <div><label>Görevi</label><select data-k="oabGorev"><option>Okul Aile Birliği Başkanı</option><option>Muhasip Üye</option></select></div></div>
+    <label>Veli</label><input data-k="veli">
+    <label>Şube Müdürü (isteğe bağlı — imza yerinde boş kalabilir)</label><input data-k="sube">
+    <label>Denetim yetkilisi</label><input data-k="denetim">
+  </div>
+  <div class="card"><h3><i>🧹</i>Görevli personel ve mekânlar</h3>
+    <label>Yazışma – Muhasebe işleri</label><input data-k="yazisma">
+    <label>Temizlik, Bakım ve Beslenme (her satıra bir kişi)</label><textarea data-k="temizlik" rows="3"></textarea>
+    <div class="g2">
+      <div><label>Çok amaçlı salon (adet)</label><input data-k="salon"></div>
+      <div><label>Atölye (adet)</label><input data-k="atolye"></div>
+      <div><label>Derslik (adet)</label><input data-k="derslik"></div>
+      <div><label>Diğer (belirtiniz)</label><input data-k="digerMekan"></div>
+    </div>
+  </div>
+</div>
+<div class="form">
+  <div class="card"><h3><i>🧮</i>Ücret belirleme (tüm okul için ortak)</h3>
+    <div class="g2">
+      <div><label>Memur maaş katsayısı (A)</label><input data-k="katsayi"></div>
+      <div><label>Gündüz öğretimi göstergesi (B)</label><input data-k="gosterge"></div>
+    </div>
+    <label>Kulüpte yemek hizmeti veriliyor mu?</label>
+    <select data-k="yemek"><option value="0">Hayır (üst sınır A×B/4)</option><option value="1">Evet (üst sınır A×B/3)</option></select>
+    <label>Okulun belirlediği saat ücreti (E, TL)</label><input data-k="saat">
+    <div id="okDurum" aria-live="polite" style="margin-top:10px"></div>
+    <p class="note">Her öğretmenin günlük saati, iş günü ve öğrenci sayısı kendi sekmesinde girilir. Aylık ücret = saat ücreti × günlük saat × iş günü; öğretmenin geliri bunun öğrenci sayısıyla çarpımıdır.</p>
+  </div>
+  <div class="card"><h3><i>🧾</i>Bordro parametreleri</h3>
+    <div class="g3">
+      <div><label>Brüt asgari ücret</label><input data-k="asgari"></div>
+      <div><label>Gelir vergisi istisnası</label><input data-k="gvIst"></div>
+      <div><label>Gelir vergisi oranı (%)</label><input data-k="gvOran"></div>
+      <div><label>Ay / yıl</label><input data-k="ay" placeholder="Ekim 2026"></div>
+      <div><label>Düzenleyen</label><input data-k="duzenleyen"></div>
+      <div><label>Onaylayan</label><input data-k="onaylayan"></div>
+    </div>
+  </div>
+  <div class="card"><h3><i>🖨</i>Toplu çıktılar</h3>
+    <div class="actions">
+      <button class="btn" onclick="printDoc('hepsi')">🖨 Tüm öğretmenlerin onayları</button>
+      <button class="btn gold" onclick="wordAll()">📝 Tümü Word (.docx)</button>
+      <button class="btn sec" onclick="downloadPrintable('hepsi')">📄 Tümü yazdırılabilir HTML</button>
+    </div>
+    <p class="note">Her öğretmen için 2 sayfa çıkar: dikey EK-1 onay + yatay EK-3 tablosu.</p>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn sec sm" onclick="exportData()">💾 Bilgileri yedekle (JSON)</button>
+      <label class="btn sec sm" style="cursor:pointer;margin:0;color:var(--ink)">📂 Yedekten yükle<input type="file" accept=".json,application/json" style="display:none" onchange="importData(this)"></label>
+    </div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">📋 Yedeği metin olarak kopyala / yapıştır (indirme çalışmıyorsa)</summary>
+      <textarea id="bkTxt" rows="4" aria-label="Yedek metni" placeholder="Yedek metni burada görünür; ya da kayıtlı bir yedeği buraya yapıştırın" style="margin-top:6px"></textarea>
+      <div class="actions" style="margin-top:6px"><button class="btn sec sm" onclick="showBackupText()">Yedeği göster</button><button class="btn sec sm" onclick="copyBackupText()">Kopyala</button><button class="btn sec sm" onclick="loadBackupText()">Bu metinden yükle</button></div>
+      <p class="note">Metni kopyalayıp bir not defterine, e-postaya veya mesaja yapıştırarak saklayabilirsiniz. Başka tarayıcıda ya da dosya sürümünde "Bu metinden yükle" ile geri açarsınız.</p></details>
+    <p class="note">Bilgiler adrese göre ayrı saklanır (bilgisayardaki dosya ve yayındaki sayfa birbirinden bağımsızdır). Birinden yedek alıp diğerine yükleyerek taşıyabilirsiniz.</p>
+    <p class="note">✓ Bu sekmedeki okul bilgileri bu tarayıcıda <b>kalıcı kaydedilir</b>; "Sıfırla" bunları silmez.
+      <button class="btn sec sm" id="btnReset" onclick="resetAll()" style="margin-left:6px">Öğretmenleri sıfırla</button>
+      <button class="btn sec sm" id="btnForget" onclick="forgetSchool()">Kayıtlı okul bilgilerini sil</button></p>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- ============ ÖĞRETMEN ============ -->
+<section class="view" id="v-ogr">
+<div class="layout">
+<div class="form">
+  <div class="card">
+    <div class="actions">
+      <button class="btn" onclick="printDoc('ogr')">🖨 Bu öğretmenin onayı (2 sayfa)</button>
+      <button class="btn gold" onclick="wordTeacher()">📝 Word olarak indir</button>
+      <button class="btn sec" onclick="downloadPrintable('ogr')">📄 Yazdırılabilir HTML</button>
+      <button class="btn sec" id="btnDel" onclick="delTeacher()">Öğretmeni sil</button>
+    </div>
+  </div>
+  <div class="card"><h3><i>🎓</i>Öğretmen bilgileri</h3>
+    <label>Adı Soyadı</label><input data-t="ad" placeholder="Adı Soyadı">
+    <div class="g2">
+      <div><label>Kadro durumu</label><select data-t="kadro"><option>Kadrolu</option><option>Usta öğretici</option><option>Koordinatör</option></select></div>
+      <div><label>Etkinlik günleri</label><input data-t="gunler" placeholder="Pazartesi, Çarşamba"></div>
+    </div>
+    <label>Etkinlik alanları (her satıra bir alan)</label><textarea data-t="alan" rows="3" placeholder="Halkoyunları&#10;Drama"></textarea>
+  </div>
+  <div class="card"><h3><i>⏱</i>Saat ve öğrenci</h3>
+    <div class="g3">
+      <div><label>Günlük etkinlik saati (F)</label><input data-t="gunluk" inputmode="decimal"></div>
+      <div><label>Aylık iş günü (G)</label><input data-t="gun" inputmode="decimal"></div>
+      <div><label>Öğrenci sayısı (I)</label><input data-t="cocuk" inputmode="numeric"></div>
+    </div>
+    <div class="stat" id="tStat"></div>
+  </div>
+  <div class="card"><h3><i>💰</i>Bu öğretmenin bordrosu</h3>
+    <div class="g2">
+      <div><label>Sigorta durumu</label><select data-t="sig"><option value="resmi">Resmî görevli (SGK yok)</option><option value="sgkli">SGK'lı</option><option value="emekli">Emekli (SGDP)</option></select></div>
+      <div><label>Brüt ücret (boşsa otomatik)</label><input data-t="brut" id="tBrut" inputmode="decimal"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-t="ist" style="width:auto"> Vergi istisnası uygula (yalnız SGK'lı)</label>
+    <div class="scroll" style="margin-top:10px"><table class="t" id="tBordro"></table></div>
+    <p class="note">Öğretmenin brüt ücreti yalnızca kendi öğrencilerinin gelirinin %55'idir. Toplam bordroda bu satır olduğu gibi kullanılır.</p>
+  </div>
+</div>
+<div class="stage" id="stageT">
+  <div class="cap"><b>Canlı önizleme</b><span id="fitInfo" aria-live="polite"></span></div>
+  <div class="pg" data-w="210"><span class="tag">Sayfa 1 · EK-1</span><div class="pg-box" id="pgOnay"></div></div>
+  <div class="pg" data-w="297"><span class="tag">Sayfa 2 · EK-3</span><div class="pg-box" id="pgEk3"></div></div>
+</div>
+</div>
+</section>
+
+<!-- ============ TOPLU ONAY ============ -->
+<section class="view" id="v-toplu">
+<div class="layout" style="grid-template-columns:minmax(0,1fr)">
+<div class="form">
+  <div class="card">
+    <div class="actions">
+      <button class="btn" onclick="printDoc('toplu')">🖨 Toplu onayı yazdır (2 sayfa)</button>
+      <button class="btn gold" onclick="wordToplu()">📝 Toplu onay Word (.docx)</button>
+      <button class="btn sec" onclick="downloadPrintable('toplu')">📄 Yazdırılabilir HTML</button>
+    </div>
+    <p class="note">Tek onay evrakında <b>tüm öğretmenlerin</b> isimleri listelenir; EK-3'te öğrenci sayısı ve aylık gelir tüm öğretmenlerin toplamıdır. Bordro bu toplam ve öğretmenlerin kendi öğrencilerine göre hesaplanır (Toplam Bordro sekmesi).</p>
+    <div class="stat" id="tpStat" style="margin-top:10px"></div>
+    <div id="tpUyari" aria-live="polite"></div>
+  </div>
+  <div class="card"><h3><i>📋</i>Tüm öğretmenler — tek liste</h3>
+    <p class="note" style="margin:0 0 8px">Buradaki her satır, ilgili öğretmenin kendi sekmesiyle aynı bilgidir. Etkinlik alanlarını virgülle ayırın.</p>
+    <div class="scroll"><table class="t" id="listTable"></table></div>
+    <div class="actions" style="margin-top:10px"><button class="btn sec" onclick="addTeacherList()">+ Öğretmen ekle</button></div>
+  </div>
+</div>
+<div class="stage" id="stageP">
+  <div class="cap"><b>Canlı önizleme</b><span id="tpFit" aria-live="polite"></span></div>
+  <div class="pg" data-w="210"><span class="tag">Sayfa 1 · EK-1 (toplu)</span><div class="pg-box" id="pgTOnay"></div></div>
+  <div class="pg" data-w="297"><span class="tag">Sayfa 2 · EK-3 (toplam)</span><div class="pg-box" id="pgTEk3"></div></div>
+</div>
+</div>
+</section>
+
+<!-- ============ TOPLAM BORDRO ============ -->
+<section class="view" id="v-bordro">
+<div class="layout" style="grid-template-columns:minmax(0,1fr)">
+<div class="form" id="bordroForm">
+  <div class="card">
+    <div class="actions">
+      <button class="btn" onclick="printDoc('bordro')">🖨 Toplam bordroyu yazdır / PDF'e kaydet</button>
+      <button class="btn gold" onclick="csvBordro()">📊 Excel için indir (CSV)</button>
+      <button class="btn sec" onclick="downloadPrintable('bordro')">📄 Yazdırılabilir HTML indir</button>
+      <button class="btn sec" onclick="wordBordro()">📝 Bordro Word (.docx)</button>
+    </div>
+    <div class="stat" id="bStat" style="margin-top:12px"></div>
+    <div id="bUyari" aria-live="polite"></div>
+  </div>
+  <div class="card"><h3><i>1</i>Gelir dağılımı (tüm öğrencilerden)</h3>
+    <p class="note" style="margin:0 0 8px">Müdür, müdür yardımcısı, muhasebe, temizlik, denetim ve temel giderler <b>tüm öğrencilerin</b> aylık ücretlerinden hesaplanır. Öğretmenlerin payı yalnızca <b>kendi öğrencilerinden</b> hesaplanır.</p>
+    <div id="bGelir" class="scroll"></div>
+  </div>
+  <div class="card"><h3><i>2</i>Öğretmen gelirleri</h3><div id="bOgr" class="scroll"></div></div>
+  <div class="card"><h3><i>3</i>Toplam bordro</h3>
+    <p class="note" style="margin:0 0 8px">Kişi adları Okul sekmesinden ve öğretmen sekmelerinden gelir. Brüt ücret kutusu boşsa otomatik hesaplanır; yazarsanız yazdığınız geçerli olur.</p>
+    <div class="scroll"><table class="t" id="bkTable"></table></div>
+  </div>
+</div>
+<div class="stage" id="stageB">
+  <div class="cap"><b>Canlı önizleme</b></div>
+  <div class="pg" data-w="297"><span class="tag">Toplam bordro</span><div class="pg-box" id="pgBordro"></div></div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<div id="printArea" aria-hidden="true"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const STORE='bucuk-ogretmen-v1', PSTORE='bucuk-ogretmen-okul', OLD_PSTORE='bucuk-cocuk-kulubu-okul';
+const DEF={okul:'Bucuk İlkokulu',oabGorev:'Okul Aile Birliği Başkanı',olurUnvan:'İl/İlçe Millî Eğitim Müdürü',
+  katsayi:'1,575512',gosterge:'140',yemek:'0',saat:'45',asgari:'33030',gvIst:'4211,33',gvOran:'15'};
+const PKEYS=['okul','mudur','mudyrd','koord','oab','oabGorev','sube','ilceMem','olurUnvan','denetim','yazisma','temizlik','salon','atolye','derslik','digerMekan','katsayi','gosterge','yemek','saat','asgari','gvIst','gvOran','duzenleyen','onaylayan'];
+let S={}; try{S=JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){}
+if(!S||typeof S!=='object'||Array.isArray(S)) S={};
+for(const k in DEF) if(S[k]===undefined) S[k]=DEF[k];
+let P={}; try{P=JSON.parse(localStorage.getItem(PSTORE)||'null')||JSON.parse(localStorage.getItem(OLD_PSTORE)||'{}')}catch(e){}
+if(!P||typeof P!=='object'||Array.isArray(P)) P={};
+for(const k of PKEYS){ const pv=P[k]; if(typeof pv==='string'&&pv.trim()!==''&&(S[k]===undefined||String(S[k]).trim()===''||S[k]===DEF[k])) S[k]=pv; }
+const save=()=>{try{localStorage.setItem(STORE,JSON.stringify(S)); const pp={}; PKEYS.forEach(k=>{pp[k]=S[k]??''}); localStorage.setItem(PSTORE,JSON.stringify(pp));}catch(e){}};
+
+const num=v=>{ if(typeof v==='number')return isFinite(v)?v:0; v=String(v??'').trim(); if(!v)return 0;
+  if(v.includes(',')) v=v.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(v)) v=v.replace(/\./g,'');
+  const n=parseFloat(v); return isFinite(n)?n:0; };
+const nf=(d)=>new Intl.NumberFormat('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const tl=n=>nf(2).format(n||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dot=(s,cls='')=>`<span class="dot ${cls}">${esc(s)||'&nbsp;'}</span>`;
+const lines=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+
+
+/* ---------- hesap ---------- */
+function calc(p=''){
+  const g=k=>S[p+k];
+  const A=num(g('katsayi')),B=num(g('gosterge')),div=g('yemek')==='1'?3:4;
+  const C=A*B/6, D=A*B/div;
+  const E=num(g('saat')),F=num(g('gunluk')),G=num(g('gun')),I=num(g('cocuk'));
+  const H=E*F*G, J=H*I, K=Math.round(A*9500*100)/100;
+  const gr=num(S.grup), gunlukDers=gr*F, aylikDers=gunlukDers*G, kd=num(S.koordDers);
+  const names={
+    ogr:S.ogr.filter(o=>o.ad.trim()).map(o=>o.ad.trim()),
+    tem:lines(S.temizlik)
+  };
+  const pay=[
+    ['Temel Giderler (Materyal Alımı, Beslenme, SGK Prim ve Okulun Diğer Giderleri)',.26,''],
+    ['Denetleme Yetkilisi',.01,S.denetim],
+    ['Kulüp Yönetim Kurulu Başkanı - Müdür',.07,S.mudur],
+    ['Kulüp Yönetim Kurulunda Görevli Müdür Yardımcısı',.05,S.mudyrd],
+    ['Öğretmen, Usta Öğretici ve Koordinatör Öğretmen',.55,names.ogr.join(', ')],
+    ['Yazışma-Muhasebe İşlerini Yürüten Personel',.02,S.yazisma],
+    ['Temizlik Bakım ve Beslenme İşlerini Yürüten Personel',.04,names.tem.join(', ')]
+  ].map(([ad,o,ki])=>({ad,o,ki,t:J*o}));
+  const tavan=[['Denetim Yetkilisi, Müdür, Koordinatör Öğrt.',2.75],['Yönetim Kurulunda Görevli Müdür Yard.',2.5],['Kadrolu Öğretmen',3],['Usta Öğretici',4],['Muhasebe-Temizlik',2]].map(([ad,k])=>({ad,k,t:K*k}));
+  return {A,B,C,D,E,F,G,H,I,J,K,gr,gunlukDers,aylikDers,kd,pay,tavan,ok:E>=C-1e-9&&E<=D+1e-9&&E>0};
+}
+
+const ROLES={baskan:['Başkan — Okul Müdürü',2.75],uye:['Üye — Müdür Yardımcısı',2.5],muhasebe:['Muhasebe / yazışma',2],temizlik:['Temizlik / hizmetli',2],denetim:['Denetim yetkilisi',2.75],ogretmen:['Öğretmen',3],usta:['Usta öğretici',4],koord:['Koordinatör öğretmen',2.75]};
+const POOL={baskan:2,uye:3,muhasebe:5,temizlik:6,denetim:1,ogretmen:4,usta:4,koord:4}; // pay[] indeksi
+
+function bordro(k,brut){
+  const a=num(S.asgari),ist=num(S.gvIst),o=num(S.gvOran)/100;
+  let sgk=0,isz=0,gv=0,damga=0,isv=0;
+  if(k.sig==='sgkli'){sgk=brut*.14;isz=brut*.01;
+    if(k.ist!==false){gv=Math.max(0,(brut-sgk-isz)*o-ist);damga=Math.max(0,(brut-a)*.00759);}
+    else{gv=(brut-sgk-isz)*o;damga=brut*.00759;} isv=brut*.2375;}
+  else if(k.sig==='emekli'){sgk=brut*.075;gv=(brut-sgk)*o;damga=brut*.00759;isv=brut*.2475;}
+  else{gv=brut*o;damga=brut*.00759;}
+  const kes=gv+damga+sgk+isz; return {brut,gv,damga,sgk,isz,kes,net:brut-kes,isv};
+}
+
+
+/* ---------- EK-1 (docx'teki özgün düzen, tek sayfa) ---------- */
+function ek1(c){
+  const L=(s,w='')=>`<span class="dl ${w}">${s?'<b>'+esc(s)+'</b>':'&nbsp;'}</span>`;
+  const og=S.ogr.filter(o=>o.ad.trim()); const ogRows=[...og]; while(ogRows.length<4)ogRows.push({ad:'',kadro:''});
+  const tem=lines(S.temizlik); const temRows=[...tem]; while(temRows.length<4)temRows.push('');
+  const al=lines(S.alanlar); const alRows=[...al]; while(alRows.length<5)alRows.push('');
+  const kurul=[[S.mudur,'Okul Müdürü'],[S.mudyrd,'Müdür Yardımcısı'],[S.koord,'Öğretmen veya Koordinatör Öğretmen'],[S.oab,S.oabGorev],[S.veli,'Veli']];
+  return `<div class="sheet port ek1" id="sheetOnay">
+  <div class="r"><b>EK-1</b><br><span class="sm">(Değişik Ek 31/7/2024 tarih ve 110752381 sayılı Makam Oluru)</span></div>
+  <h2>${S.okul&&S.okul.trim()?esc(S.okul.trim().toLocaleUpperCase('tr'))+' ':''}ÇOCUK KULÜBÜ ONAY ÖRNEĞİ</h2>
+  <table class="ek1t"><tr><td class="b">ÇOCUK KULÜBÜ YÖNETİM KURULU</td><td class="b">GÖREVİ</td></tr>
+  ${kurul.map(([a,g])=>`<tr><td>${L(a)}</td><td>${esc(g)}</td></tr>`).join('')}</table>
+
+  <p class="b h">ÖĞRETMEN/USTA ÖĞRETİCİ/KOORDİNATÖR ÖĞRETMEN</p>
+  <p class="sm">(Öğretmenin kadro durumunu belirtiniz – kadrolu/usta öğretici/koordinatör ve benzeri)</p>
+  ${og.length>8?`<table class="ek1t ek1t2">${Array.from({length:Math.ceil(og.length/2)},(_,i)=>{const cell=x=>x?`<td>${L(x.ad,'s2')} ${esc(x.kadro)}</td>`:'<td></td>';return `<tr>${cell(og[2*i])}${cell(og[2*i+1])}</tr>`;}).join('')}</table>`:`<table class="ek1t">${ogRows.map(o=>`<tr><td>${L(o.ad)}</td><td>${esc(o.kadro)}</td></tr>`).join('')}</table>`}
+
+  <p class="b h">GÖREVLİ PERSONEL</p>
+  <p>A. Yazışma – Muhasebe işleri</p>
+  <p class="in">${L(S.yazisma,'w')}</p>
+  <p>B. Temizlik Bakım ve Beslenme</p>
+  ${temRows.map((t,i)=>`<p class="in">${i<3?(i+1)+'. ':'&nbsp;&nbsp;&nbsp;&nbsp;'}${L(t,'w')}</p>`).join('')}
+
+  <p class="b h">KULÜP İÇİN KULLANILAN MEKÂNLAR VE SAYILARI</p>
+  <p>1. Çok amaçlı salon ${L(S.salon,'s')}</p>
+  <p>2. Atölye ${L(S.atolye,'s')}</p>
+  <p>3. Derslik ${L(S.derslik,'s')}</p>
+  <p>4. Diğer (Belirtiniz) ${L(S.digerMekan,'m')}</p>
+
+  <p class="h"><b>KULÜP ETKİNLİĞİ YAPILACAK GÜNLER</b> ${L(S.gunler,'w')}</p>
+  <p><b>GÜNLÜK ETKİNLİK SAATİ SAYISI</b> ${L(S.gunluk,'s')}</p>
+  <p><b>KULÜP ETKİNLİK SAATİ ÜCRETİ</b> ${L(c.E?tl(c.E):'','m')} TL.</p>
+  <p><b>ÖĞRENCİ SAYISI</b> ${L(S.cocuk,'s')}</p>
+  <p><b>AYLIK TAHMİNÎ BÜTÇE</b> ${L(c.J?tl(c.J):'','m')} TL</p>
+
+  <p class="b h">KULÜP ETKİNLİK ALANLARI</p>
+  ${alRows.map(a=>`<p class="in">${L(a,'m')}</p>`).join('')}
+
+  <p class="h" style="padding-left:10mm">Yukarıdaki bilgiler doğrultusunda çocuk kulübü açılmasını olurlarınıza arz ederim.</p>
+  <div class="rt">${L(S.tarih,'s')}<br>${L(S.mudur,'m')}<br>Adı Soyadı<br>Okul Müdürü</div>
+  <p class="sm2">* 5 yaş çocukların okullaşmasını engelleyici bir husus olmadığından kulüp açılmasını uygun görüşle arz ederim.</p>
+  <div class="lt">${L(S.sube,'m')}<br>Müdür Yardımcısı/Şube Müdürü</div>
+  <div class="rt" style="margin-top:3mm"><b>OLUR</b><br>…../…../…..<br>${L(S.ilceMem,'m')}<br>Adı Soyadı<br>${esc(S.olurUnvan)}</div>
+  </div>`;
+}
+
+/* ---------- EK-3 (ikinci sayfa) ---------- */
+function ek3(c){
+  const f0=nf(0), f2=tl, v=n=>n?f2(n):'';
+  const tot=c.pay.reduce((a,p)=>a+p.t,0);
+  const fmtK=x=>String(x).replace('.',',');
+  return `<div class="sheet land" id="sheetEk3">
+  <div class="e3title"><div style="font-size:13pt;padding-top:8px">ÇOCUK KULÜPLERİ ÖRNEK BÜTÇE HESAPLAMA TABLOSU<span class="nm-sm" style="margin-top:2px">${esc(S.okul)} Çocuk Kulübü${S.ogr&&S.ogr[0]&&S.ogr[0].ad?' · '+esc(S.ogr[0].ad):''}</span></div><div>EK-3</div></div>
+  <table class="e3">
+    <tr><td colspan="12" class="hd">ÜCRET BELİRLEME TABLOSU</td></tr>
+    <tr><th>A</th><th>B</th><th></th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th></tr>
+    <tr style="height:19mm">
+      <td class="gr">Aylıklar İçin Belirlenen Katsayı</td><td class="gy">Gündüz Öğretimi Göstergesi</td><td class="gy">Kulüpte Yemek Hizmeti Veriliyor mu?</td>
+      <td class="gy">Belirlenebilecek En Az Saat Ücreti<br>(A*B/6)</td><td class="gy">Belirlenebilecek En Çok Saat Ücreti<br>${S.yemek==='1'?'A*B/3':'A*B/4'}</td>
+      <td class="gr">Okulun Belirlediği Saat Ücreti</td><td class="gr">Günlük Kulüp Etkinlik Saati Sayısı</td><td class="gy">Ortalama İş Günü Sayısı</td>
+      <td class="gy">Okulun Belirlediği Aylık Ücret<br>(E*F*G)</td><td class="gy">Kulübe Katılan Çocuk Sayısı</td><td class="gy">Toplam Aylık Ücret<br>(H*I)</td><td class="gy">En Yüksek Devlet Memuru Brüt Aylığı</td></tr>
+    <tr class="val">
+      <td class="val in">${nf(6).format(c.A)}</td><td class="val" style="color:#c00">${f0.format(c.B)}</td><td class="val in">${S.yemek==='1'?'Evet':'Hayır'}</td>
+      <td>${f2(c.C)} TL</td><td>${f2(c.D)}</td><td class="val in">${f2(c.E)} ₺</td><td class="val in">${esc(S.gunluk)}</td><td class="val in">${esc(S.gun)}</td>
+      <td>${f2(c.H)}</td><td class="val in">${esc(S.cocuk)}</td><td>${f2(c.J)} TL</td><td class="val in">${f2(c.K)} TL</td></tr>
+  </table>
+  <div style="display:grid;grid-template-columns:55% 45%;gap:3mm;margin-top:3mm;align-items:start">
+    <table class="e3">
+      <tr><td colspan="4" class="bl" style="font-size:10pt;padding:5px">GİDER KALEMLERİ ÖZET TABLOSU</td></tr>
+      <tr class="bl"><td style="width:48%">GİDER KALEMLERİ</td><td style="width:11%">ORAN</td><td style="width:19%">MİKTAR</td><td style="width:22%">GÖREVLİ</td></tr>
+      ${c.pay.map(p=>`<tr style="height:10.5mm"><td class="l">${p.ad}</td><td>%${Math.round(p.o*100)}</td><td class="rr">${f2(p.t)} TL</td><td style="font-size:7.6pt;font-weight:700">${esc(p.ki)}</td></tr>`).join('')}
+      <tr style="height:9mm" class="b"><td class="rr" style="font-weight:700">Toplam</td><td style="font-weight:700">%100</td><td class="rr" style="font-weight:700">${f2(tot)} TL</td><td></td></tr>
+    </table>
+    <div>
+      <table class="e3">
+        <tr><td colspan="3" class="bl" style="font-size:10pt;padding:5px">DERS SAATİ TOPLAMI BELİRLEME TABLOSU</td></tr>
+        <tr><td class="gr">Kulüp Grup (Sınıf) Sayısı</td><td class="gy">Günlük Ders Saati Toplamı</td><td class="gy">Aylık Ders Saati Toplamı</td></tr>
+        <tr class="val"><td class="val in">${f0.format(c.gr)}</td><td class="val">${f0.format(c.gunlukDers)}</td><td class="val">${f0.format(c.aylikDers)}</td></tr>
+        <tr><td colspan="2" class="gr" style="font-size:7.8pt">Varsa Koordinatörlerin, Koordinatörlük Yaptığı Aylık Ders Sayısı</td><td class="gr" style="font-size:7.8pt">Koordinatör Dahil Kulüpte Ödeme Yapılacak Aylık Ders Saati Sayısı</td></tr>
+        <tr style="height:9mm"><td colspan="2" class="val in">${f0.format(c.kd)}</td><td class="val">${f0.format(c.aylikDers+c.kd)}</td></tr>
+      </table>
+      <table class="e3" style="margin-top:3mm">
+        <tr><td colspan="6" class="bl" style="font-size:8.6pt;padding:4px">YÖNERGEYE GÖRE GÖREVLENDİRİLECEK KİŞİLERİN ALABİLECEĞİ BRÜT ÜCRET ÜST ORANLARI VE ÖDENECEK EN FAZLA BRÜT ÜCRET TUTARLARI TABLOSU</td></tr>
+        <tr style="height:15mm"><td class="bl"></td>${c.tavan.map(t=>`<td class="bl" style="font-size:7.6pt;font-weight:600">${t.ad}</td>`).join('')}</tr>
+        <tr><td class="bl l">Oran →</td>${c.tavan.map(t=>`<td class="val" style="font-size:10pt">${nf(2).format(t.k)}</td>`).join('')}</tr>
+        <tr style="height:9mm"><td class="bl l">Brüt Tavan Ücret →</td>${c.tavan.map(t=>`<td class="val" style="font-size:9.6pt">${f2(t.t)}</td>`).join('')}</tr>
+      </table>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:6mm;text-align:center;font-size:9pt">
+        <div>Hazırlayan<br><br><b>${esc(S.mudyrd)||'&nbsp;'}</b><br>Müdür Yardımcısı</div>
+        <div>Onaylayan<br><br><b>${esc(S.mudur)||'&nbsp;'}</b><br>Okul Müdürü</div>
+      </div>
+    </div>
+  </div>
+  </div>`;
+}
+
+
+/* ---------- Word (.docx) çıktısı: kütüphanesiz ---------- */
+const WX=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const WR=(t,o={})=>`<w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}<w:sz w:val="${o.sz||18}"/><w:szCs w:val="${o.sz||18}"/></w:rPr>${String(t).split('\t').map((s,i)=>(i?'<w:tab/>':'')+`<w:t xml:space="preserve">${WX(s)}</w:t>`).join('')}</w:r>`;
+const WP=(runs,o={})=>`<w:p><w:pPr>${o.tabs?`<w:tabs>${o.tabs.map(t=>`<w:tab w:val="left" w:pos="${t}"/>`).join('')}</w:tabs>`:''}<w:spacing w:before="${o.before||0}" w:after="${o.after||0}" w:line="${o.line||240}" w:lineRule="auto"/>${o.ind?`<w:ind w:left="${o.ind}"/>`:''}${o.jc?`<w:jc w:val="${o.jc}"/>`:''}${o.sect||''}</w:pPr>${runs||''}</w:p>`;
+const WB='<w:tcBorders>'+['top','left','bottom','right'].map(s=>`<w:${s} w:val="single" w:sz="4" w:space="0" w:color="000000"/>`).join('')+'</w:tcBorders>';
+const WC=(w,content,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.span?`<w:gridSpan w:val="${o.span}"/>`:''}${o.border===false?'':WB}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:''}<w:vAlign w:val="center"/></w:tcPr>${content}</w:tc>`;
+const WT=(widths,rows)=>`<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="60" w:type="dxa"/><w:right w:w="60" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>`;
+const WRW=(cells,h)=>`<w:tr>${h?`<w:trPr><w:trHeight w:val="${h}" w:hRule="atLeast"/></w:trPr>`:''}${cells.join('')}</w:tr>`;
+const WCP=(t,o={})=>WP(WR(t,{b:o.b,sz:o.sz||16}),{jc:o.jc||'center'});
+
+function wordPart(c,last){
+  const fill=(v,n=24)=>v&&String(v).trim()?WR(v,{b:1}):WR('…'.repeat(n));
+  const og=S.ogr.filter(o=>o.ad.trim()); while(og.length<4)og.push({ad:'',kadro:''});
+  const tem=lines(S.temizlik); while(tem.length<4)tem.push('');
+  const al=lines(S.alanlar); while(al.length<5)al.push('');
+  const T=[5800];
+  const kurul=[[S.mudur,'Okul Müdürü'],[S.mudyrd,'Müdür Yardımcısı'],[S.koord,'Öğretmen veya Koordinatör Öğretmen'],[S.oab,S.oabGorev],[S.veli,'Veli']];
+  const sec1='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="620" w:right="1134" w:bottom="620" w:left="1134" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>';
+  const e1=[
+    WP(WR('EK-1',{b:1,sz:20}),{jc:'right'}),
+    WP(WR('(Değişik Ek 31/7/2024 tarih ve 110752381 sayılı Makam Oluru)',{sz:14}),{jc:'right'}),
+    WP(WR((S.okul&&S.okul.trim()?S.okul.trim().toLocaleUpperCase('tr')+' ':'')+'ÇOCUK KULÜBÜ ONAY ÖRNEĞİ',{b:1,sz:24}),{jc:'center',before:60,after:60}),
+    WP(WR('ÇOCUK KULÜBÜ YÖNETİM KURULU\tGÖREVİ',{b:1}),{tabs:T}),
+    ...kurul.map(([a,g])=>WP(fill(a)+WR('\t'+g),{tabs:T})),
+    WP(WR('ÖĞRETMEN/USTA ÖĞRETİCİ/KOORDİNATÖR ÖĞRETMEN',{b:1}),{before:80}),
+    WP(WR('(Öğretmenin kadro durumunu belirtiniz – kadrolu/usta öğretici/koordinatör ve benzeri)',{sz:14})),
+    ...og.map(o=>WP(fill(o.ad)+WR('\t'+(o.kadro||'')),{tabs:T})),
+    WP(WR('GÖREVLİ PERSONEL',{b:1}),{before:80}),
+    WP(WR('A. Yazışma – Muhasebe işleri')),
+    WP(fill(S.yazisma,30),{ind:200}),
+    WP(WR('B. Temizlik Bakım ve Beslenme')),
+    ...tem.map((t,i)=>WP(WR(i<3?(i+1)+'. ':'    ')+fill(t,30),{ind:200})),
+    WP(WR('KULÜP İÇİN KULLANILAN MEKÂNLAR VE SAYILARI',{b:1}),{before:80}),
+    WP(WR('1. Çok amaçlı salon ')+fill(S.salon,8)),
+    WP(WR('2. Atölye ')+fill(S.atolye,8)),
+    WP(WR('3. Derslik ')+fill(S.derslik,8)),
+    WP(WR('4. Diğer (Belirtiniz) ')+fill(S.digerMekan,16)),
+    WP(WR('KULÜP ETKİNLİĞİ YAPILACAK GÜNLER ',{b:1})+fill(S.gunler,24),{before:80}),
+    WP(WR('GÜNLÜK ETKİNLİK SAATİ SAYISI ',{b:1})+fill(S.gunluk,6)),
+    WP(WR('KULÜP ETKİNLİK SAATİ ÜCRETİ ',{b:1})+fill(c.E?tl(c.E):'',10)+WR(' TL.')),
+    WP(WR('ÖĞRENCİ SAYISI ',{b:1})+fill(S.cocuk,8)),
+    WP(WR('AYLIK TAHMİNÎ BÜTÇE ',{b:1})+fill(c.J?tl(c.J):'',12)+WR(' TL')),
+    WP(WR('KULÜP ETKİNLİK ALANLARI',{b:1}),{before:80}),
+    ...al.map(a=>WP(fill(a,16),{ind:200})),
+    WP(WR('Yukarıdaki bilgiler doğrultusunda çocuk kulübü açılmasını olurlarınıza arz ederim.'),{ind:567,before:120}),
+    WP(fill(S.tarih,8),{jc:'right',before:60}),
+    WP(fill(S.mudur,18),{jc:'right'}),
+    WP(WR('Adı Soyadı'),{jc:'right'}),
+    WP(WR('Okul Müdürü'),{jc:'right'}),
+    WP(WR('* 5 yaş çocukların okullaşmasını engelleyici bir husus olmadığından kulüp açılmasını uygun görüşle arz ederim.',{sz:16}),{before:80}),
+    WP(fill(S.sube,18),{ind:600,before:60}),
+    WP(WR('Müdür Yardımcısı/Şube Müdürü'),{ind:600}),
+    WP(WR('OLUR',{b:1}),{jc:'right',before:60}),
+    WP(WR('…../…../…..'),{jc:'right'}),
+    WP(fill(S.ilceMem,18),{jc:'right'}),
+    WP(WR('Adı Soyadı'),{jc:'right'}),
+    WP(WR(S.olurUnvan||'İl/İlçe Millî Eğitim Müdürü'),{jc:'right'}),
+    WP('',{line:20,sect:sec1})
+  ].join('');
+
+  // ---- EK-3 (yatay) ----
+  const GR='92D050',GY='D9D9D9',OR='F4B183',BL='D6DCE4';
+  const f0=n=>nf(0).format(n), f2=tl;
+  const wA=[1250,1100,1150,1450,1450,1350,1250,1150,1350,1150,1500,1554];
+  const hdr=(t,f)=>t;
+  const lab=[['Aylıklar İçin Belirlenen Katsayı',GR],['Gündüz Öğretimi Göstergesi',GY],['Kulüpte Yemek Hizmeti Veriliyor mu?',GY],['Belirlenebilecek En Az Saat Ücreti (A*B/6)',GY],['Belirlenebilecek En Çok Saat Ücreti '+(S.yemek==='1'?'A*B/3':'A*B/4'),GY],['Okulun Belirlediği Saat Ücreti',GR],['Günlük Kulüp Etkinlik Saati Sayısı',GR],['Ortalama İş Günü Sayısı',GY],['Okulun Belirlediği Aylık Ücret (E*F*G)',GY],['Kulübe Katılan Çocuk Sayısı',GY],['Toplam Aylık Ücret (H*I)',GY],['En Yüksek Devlet Memuru Brüt Aylığı',GY]];
+  const val=[nf(6).format(c.A),f0(c.B),S.yemek==='1'?'Evet':'Hayır',f2(c.C)+' TL',f2(c.D),f2(c.E)+' ₺',esc0(S.gunluk),esc0(S.gun),f2(c.H),esc0(S.cocuk),f2(c.J)+' TL',f2(c.K)+' TL'];
+  function esc0(x){return String(x??'')}
+  const title=WT([13104,2600],[WRW([WC(13104,WP(WR('ÇOCUK KULÜPLERİ ÖRNEK BÜTÇE HESAPLAMA TABLOSU',{b:1,sz:26}),{jc:'center'})+WP(WR((S.okul||'')+' Çocuk Kulübü'+(S.ogr&&S.ogr[0]&&S.ogr[0].ad?' · '+S.ogr[0].ad:''),{sz:15}),{jc:'center'})),WC(2600,WP(WR('EK-3',{b:1,sz:26}),{jc:'center'}))],500)]);
+  const tabA=WT(wA,[
+    WRW([WC(15704,WCP('ÜCRET BELİRLEME TABLOSU',{b:1,sz:18}),{span:12,fill:OR})]),
+    WRW('ABCDEFGHIJK'.split('').reduce((a,l,i)=>(a.push(WC(wA[i<2?i:i+1],WCP(l,{b:1,sz:16}))),i===1&&a.push(WC(wA[2],WCP(''))),a),[]),0),
+    WRW(lab.map(([t,f],i)=>WC(wA[i],WCP(t,{sz:14}),{fill:f})),900),
+    WRW(val.map((t,i)=>WC(wA[i],WCP(t,{b:1,sz:18}))),420)
+  ]);
+  const payRows=c.pay.map(p=>WRW([WC(3300,WP(WR(p.ad,{sz:14}))),WC(900,WCP('%'+Math.round(p.o*100),{sz:16})),WC(1900,WP(WR(f2(p.t)+' TL',{sz:16}),{jc:'right'})),WC(2000,WCP(p.ki||'',{b:1,sz:13}))],480));
+  const tot=c.pay.reduce((a,p)=>a+p.t,0);
+  const gider=WT([3300,900,1900,2000],[
+    WRW([WC(8100,WCP('GİDER KALEMLERİ ÖZET TABLOSU',{b:1,sz:18}),{span:4,fill:BL})],360),
+    WRW([WC(3300,WCP('GİDER KALEMLERİ',{b:1,sz:16}),{fill:BL}),WC(900,WCP('ORAN',{b:1,sz:16}),{fill:BL}),WC(1900,WCP('MİKTAR',{b:1,sz:16}),{fill:BL}),WC(2000,WCP('GÖREVLİ',{b:1,sz:16}),{fill:BL})]),
+    ...payRows,
+    WRW([WC(3300,WP(WR('Toplam',{b:1,sz:16}),{jc:'right'})),WC(900,WCP('%100',{b:1,sz:16})),WC(1900,WP(WR(f2(tot)+' TL',{b:1,sz:16}),{jc:'right'})),WC(2000,WCP(''))],400)
+  ]);
+  const wD=[2400,2400,2400];
+  const ders=WT(wD,[
+    WRW([WC(7200,WCP('DERS SAATİ TOPLAMI BELİRLEME TABLOSU',{b:1,sz:16}),{span:3,fill:BL})],340),
+    WRW([WC(2400,WCP('Kulüp Grup (Sınıf) Sayısı',{b:1,sz:14}),{fill:GR}),WC(2400,WCP('Günlük Ders Saati Toplamı',{sz:14}),{fill:GY}),WC(2400,WCP('Aylık Ders Saati Toplamı',{sz:14}),{fill:GY})]),
+    WRW([WC(2400,WCP(f0(c.gr),{b:1,sz:18})),WC(2400,WCP(f0(c.gunlukDers),{b:1,sz:18})),WC(2400,WCP(f0(c.aylikDers),{b:1,sz:18}))],380),
+    WRW([WC(4800,WCP('Varsa Koordinatörlerin, Koordinatörlük Yaptığı Aylık Ders Sayısı',{b:1,sz:13}),{span:2,fill:GR}),WC(2400,WCP('Koordinatör Dahil Kulüpte Ödeme Yapılacak Aylık Ders Saati Sayısı',{b:1,sz:13}),{fill:GR})],520),
+    WRW([WC(4800,WCP(f0(c.kd),{b:1,sz:18}),{span:2}),WC(2400,WCP(f0(c.aylikDers+c.kd),{b:1,sz:18}))],380)
+  ]);
+  const wT=[1300,1180,1180,1180,1180,1180];
+  const tavan=WT(wT,[
+    WRW([WC(7200,WCP('YÖNERGEYE GÖRE GÖREVLENDİRİLECEK KİŞİLERİN ALABİLECEĞİ BRÜT ÜCRET ÜST ORANLARI VE ÖDENECEK EN FAZLA BRÜT ÜCRET TUTARLARI TABLOSU',{b:1,sz:14}),{span:6,fill:BL})],520),
+    WRW([WC(1300,WCP(''),{fill:BL}),...c.tavan.map((t,i)=>WC(1180,WCP(t.ad,{sz:12}),{fill:BL}))],800),
+    WRW([WC(1300,WCP('Oran →',{b:1,sz:15}),{fill:BL}),...c.tavan.map(t=>WC(1180,WCP(nf(2).format(t.k),{b:1,sz:16})))],340),
+    WRW([WC(1300,WCP('Brüt Tavan Ücret →',{b:1,sz:13}),{fill:BL}),...c.tavan.map(t=>WC(1180,WCP(f2(t.t),{b:1,sz:15})))],440)
+  ]);
+  const nb=(w,cont)=>WC(w,cont,{border:false});
+  const alt=WT([8300,7404],[WRW([nb(8300,gider+WP('',{line:20})),nb(7404,ders+WP('',{before:100,line:20})+tavan+WP('',{line:20}))])]);
+  const imza=WT([7852,7852],[WRW([nb(7852,WP(WR('Hazırlayan',{sz:16}),{jc:'center',before:120})+WP(WR(S.mudyrd||'',{b:1,sz:16}),{jc:'center',before:200})+WP(WR('Müdür Yardımcısı',{sz:16}),{jc:'center'})),nb(7852,WP(WR('Onaylayan',{sz:16}),{jc:'center',before:120})+WP(WR(S.mudur||'',{b:1,sz:16}),{jc:'center',before:200})+WP(WR('Okul Müdürü',{sz:16}),{jc:'center'}))])]);
+  const sec2='<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="300" w:footer="300" w:gutter="0"/></w:sectPr>';
+  const e3=title+WP('',{line:60})+tabA+WP('',{line:120})+alt+WP('',{line:60})+imza+WP('',{line:20});
+  return e1+e3+(last?'':WP('',{line:20,sect:sec2}));
+}
+function crc32(u8){let c,crc=-1;if(!crc32.t){crc32.t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;crc32.t[n]=c>>>0;}}for(let i=0;i<u8.length;i++)crc=crc32.t[(crc^u8[i])&255]^(crc>>>8);return (crc^-1)>>>0;}
+function zipStore(files){
+  const enc=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];
+  for(const f of files){
+    const name=enc.encode(f.name),data=enc.encode(f.data),crc=crc32(data);
+    const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0)]);
+    parts.push(lh,name,data);
+    cd.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),name);
+    off+=lh.length+name.length+data.length;
+  }
+  const cdLen=cd.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdLen),...u32(off),...u16(0)]);
+  const all=[...parts,...cd,end],out=new Uint8Array(all.reduce((a,b)=>a+b.length,0));let p=0;for(const b of all){out.set(b,p);p+=b.length;}return out;
+}
+
+
+/* ---------- öğretmen modeli ---------- */
+const newT=()=>({id:'ogr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),ad:'',kadro:'Kadrolu',alan:'',gunler:'',gunluk:'2',gun:'20',cocuk:'',sig:'sgkli',ist:true,brut:''});
+S.ogr=(Array.isArray(S.ogr)?S.ogr:[]).filter(t=>t&&typeof t==='object').map(t=>{const n=Object.assign(newT(),t);['id','ad','kadro','alan','gunler','gunluk','gun','cocuk','sig','brut'].forEach(k=>n[k]=String(n[k]??''));n.ist=t.ist!==false;if(!['resmi','sgkli','emekli'].includes(n.sig))n.sig='sgkli';return n;});
+if(!S.ogr.length) S.ogr.push(newT());
+if(!S.bset||typeof S.bset!=='object'||Array.isArray(S.bset)) S.bset={};
+const getT=id=>S.ogr.find(t=>t.id===id);
+if(!(S.cur==='okul'||S.cur==='bordro'||S.cur==='toplu'||getT(S.cur))) S.cur='okul';
+const rolOf=t=>t.kadro==='Usta öğretici'?'usta':t.kadro==='Koordinatör'?'koord':'ogretmen';
+const tName=(t,i)=>t.ad.trim()||('Öğretmen '+(i+1));
+function viewOf(t){return {ogr:[{ad:t.ad,kadro:t.kadro}],gunler:t.gunler,gunluk:t.gunluk,gun:t.gun,cocuk:t.cocuk,alanlar:t.alan,grup:'1',koordDers:'0'};}
+function withView(t,fn){const keep=S;S=Object.assign({},keep,viewOf(t));try{return fn();}finally{S=keep;}}
+
+/* ---------- toplam hesap ---------- */
+function calcTotal(){
+  const c0=calc();
+  const Jt=S.ogr.map(t=>withView(t,()=>calc().J));
+  const J=Jt.reduce((a,b)=>a+b,0), cnt=S.ogr.reduce((a,t)=>a+num(t.cocuk),0);
+  const pay=c0.pay.map(p=>({...p,t:J*p.o}));
+  return {...c0,J,Jt,cnt,pay};
+}
+const SIG={resmi:'Resmî görevli',sgkli:"SGK'lı",emekli:'Emekli (SGDP)'};
+const TK=['brut','gv','damga','sgk','isz','kes','net','isv'];
+const sumR=R=>R.reduce((a,{b})=>{TK.forEach(x=>a[x]=(a[x]||0)+b[x]);return a;},{});
+function cfgOf(key){ const t=getT(key); if(t) return t; return S.bset[key]||(S.bset[key]={sig:key.startsWith('temizlik')?'sgkli':'resmi',ist:true,brut:''}); }
+function bRows(c){
+  const tem=lines(S.temizlik), nT=Math.max(1,tem.length), rows=[];
+  const items=[['baskan',S.mudur,'baskan'],['uye',S.mudyrd,'uye'],['muhasebe',S.yazisma,'muhasebe'],...Array.from({length:nT},(_,i)=>['temizlik'+i,tem[i]||'','temizlik']),['denetim',S.denetim,'denetim']];
+  const add=(key,ad,rol,cfg,auto,fixed,extra={})=>{const man=String(cfg.brut||'').trim()!=='';const brut=man?num(cfg.brut):auto;rows.push({key,ad,rol,cfg,auto,man,brut,fixed,b:bordro(cfg,brut),...extra});};
+  items.forEach(([key,ad,rol])=>add(key,ad,rol,cfgOf(key),c.pay[POOL[rol]].t/(rol==='temizlik'?nT:1),true));
+  S.ogr.forEach((t,i)=>add(t.id,tName(t,i),rolOf(t),t,.55*c.Jt[i],false,{t,J:c.Jt[i]}));
+  return rows;
+}
+
+/* ---------- arayüz ---------- */
+function bind(){
+  $$('[data-k]').forEach(el=>{const k=el.dataset.k; el.value=S[k]??''; el.addEventListener('input',()=>{S[k]=el.value;save();render();});});
+  document.addEventListener('input',e=>{const el=e.target; if(!el.dataset||!el.dataset.t)return; const t=getT(S.cur); if(!t)return; t[el.dataset.t]=el.type==='checkbox'?el.checked:el.value; save(); render();});
+}
+function fillTeacherForm(t){ $$('[data-t]').forEach(el=>{const v=t[el.dataset.t]; if(el.type==='checkbox')el.checked=v!==false; else el.value=v??'';}); }
+function renderBar(){
+  $('#bar').innerHTML=`<button class="chip ${S.cur==='okul'?'on':''}" role="tab" aria-selected="${S.cur==='okul'}" onclick="showView('okul')">⚙ Okul</button>`+
+    S.ogr.map((t,i)=>`<button class="chip ${S.cur===t.id?'on':''}" role="tab" aria-selected="${S.cur===t.id}" onclick="showView('${t.id}')">🎓 ${esc(tName(t,i))}</button>`).join('')+
+    `<button class="chip add" onclick="addTeacher()">+ Öğretmen ekle</button><button class="chip ${S.cur==='toplu'?'on':''}" role="tab" aria-selected="${S.cur==='toplu'}" onclick="showView('toplu')">📋 Toplu Onay</button><button class="chip sep ${S.cur==='bordro'?'on':''}" role="tab" aria-selected="${S.cur==='bordro'}" onclick="showView('bordro')">📊 Toplam Bordro</button>`;
+}
+function showView(v){
+  S.cur=v; save();
+  $('#v-okul').classList.toggle('on',v==='okul'); $('#v-bordro').classList.toggle('on',v==='bordro'); $('#v-toplu').classList.toggle('on',v==='toplu'); $('#v-ogr').classList.toggle('on',!!getT(v));
+  if(getT(v)) fillTeacherForm(getT(v)); if(v==='bordro') bordroUI(); if(v==='toplu') listUI();
+  render(); window.scrollTo(0,0);
+}
+function addTeacher(){ const t=newT(); S.ogr.push(t); save(); showView(t.id); }
+let delArmed=false;
+function delTeacher(){ const b=$('#btnDel'); if(!delArmed){delArmed=true;b.textContent='Emin misiniz? Tekrar tıklayın';setTimeout(()=>{delArmed=false;b.textContent='Öğretmeni sil';},4000);return;}
+  delArmed=false; b.textContent='Öğretmeni sil'; S.ogr=S.ogr.filter(t=>t.id!==S.cur); if(!S.ogr.length)S.ogr.push(newT()); save(); showView('okul'); }
+
+function fitEk1(sh){
+  let pt=9.8; sh.style.fontSize=pt+'pt';
+  const room=()=>{const r=sh.getBoundingClientRect(),z=r.height/(297*96/25.4); const bottom=[...sh.querySelectorAll('*')].reduce((a,e)=>Math.max(a,e.getBoundingClientRect().bottom),0); return r.bottom-10*96/25.4*z-bottom;};
+  while(room()<0&&pt>7.4){pt=Math.round((pt-.2)*10)/10; sh.style.fontSize=pt+'pt';}
+  return {pt,over:room()<0};
+}
+function fit(){ $$('.pg').forEach(pg=>{const box=pg.querySelector('.pg-box'),stage=pg.closest('.stage'); const avail=stage.clientWidth-36,wpx=parseFloat(pg.dataset.w)*96/25.4; box.style.zoom=Math.max(.2,Math.min(1,avail/wpx));}); }
+window.addEventListener('resize',fit);
+
+/* ---------- Okul sekmesi ---------- */
+function renderOkul(){
+  const c=calcTotal();
+  $('#okDurum').innerHTML=(c.ok?`<span class="pill ok">✓ Saat ücreti sınır içinde</span> <span class="note">${tl(c.C)} ₺ – ${tl(c.D)} ₺</span>`:`<span class="pill warn">⚠ Saat ücreti sınır dışında</span> <span class="note">İzin verilen: ${tl(c.C)} ₺ – ${tl(c.D)} ₺</span>`)+
+    `<div class="stat" style="margin-top:10px"><div><b>${S.ogr.length}</b><span>Öğretmen</span></div><div><b>${nf(0).format(c.cnt)}</b><span>Toplam öğrenci</span></div><div><b>${tl(c.J)} ₺</b><span>Toplam aylık gelir</span></div><div><b>${tl(c.K)} ₺</b><span>Memur brüt aylığı (K)</span></div></div>`;
+}
+
+/* ---------- Öğretmen sekmesi ---------- */
+function renderTeacher(){
+  const t=getT(S.cur); if(!t) return; const i=S.ogr.indexOf(t);
+  const r=withView(t,()=>{
+    const c=calc(); const out={c,onay:ek1(c),ek3:ek3(c)};
+    const auto=.55*c.J, man=String(t.brut).trim()!=='', brut=man?num(t.brut):auto;
+    out.auto=auto; out.brut=brut; out.b=bordro(t,brut); out.ok=c.ok; return out;
+  });
+  $('#pgOnay').innerHTML=r.onay; $('#pgEk3').innerHTML=r.ek3;
+  const f=fitEk1($('#sheetOnay'));
+  $('#fitInfo').innerHTML=f.over?'<span class="pill warn">⚠ EK-1 tek sayfaya sığmıyor</span>':'<span class="pill ok">✓ EK-1 tek sayfa'+(f.pt<9.8?' (yazı '+f.pt+' pt oldu)':'')+'</span>';
+  $('#tBrut').placeholder=tl(r.auto);
+  $('#tStat').innerHTML=`<div><b>${tl(r.c.H)} ₺</b><span>Çocuk başına aylık ücret</span></div><div><b>${tl(r.c.J)} ₺</b><span>Bu öğretmenin aylık geliri</span></div><div><b>${tl(.55*r.c.J)} ₺</b><span>Öğretmen payı (%55)</span></div>`+(r.ok?'':`<div style="background:var(--gold-l)"><b class="warn">⚠</b><span>Saat ücreti sınır dışında (Okul sekmesi)</span></div>`);
+  const x=r.b, over=r.brut>r.c.K*ROLES[rolOf(t)][1]+.005;
+  $('#tBordro').innerHTML=`<tr><th class="n">Brüt</th><th class="n">Gelir v.</th><th class="n">Damga</th><th class="n">SGK</th><th class="n">İşsizlik</th><th class="n">NET</th><th class="n">İşveren payı</th></tr><tr><td class="n">${tl(x.brut)}</td><td class="n">${tl(x.gv)}</td><td class="n">${tl(x.damga)}</td><td class="n">${tl(x.sgk)}</td><td class="n">${tl(x.isz)}</td><td class="n"><b>${tl(x.net)}</b></td><td class="n">${tl(x.isv)}</td></tr>`+(over?`<tr><td colspan="7" class="warn">⚠ Brüt, bu görevin tavanını (${tl(r.c.K*ROLES[rolOf(t)][1])} ₺) aşıyor.</td></tr>`:'');
+}
+
+/* ---------- Toplam bordro sekmesi ---------- */
+function bordroUI(){
+  const c=calcTotal(), R=bRows(c);
+  const head=`<tr><th>Adı Soyadı</th><th>Görevi</th><th>Sigorta durumu</th><th>İstisna</th><th>Brüt ücret</th><th class="n">Gelir v.</th><th class="n">Damga v.</th><th class="n">SGK (işçi)</th><th class="n">İşsizlik</th><th class="n">Kesinti</th><th class="n">NET</th><th class="n">İşveren payı</th></tr>`;
+  const rows=R.map((r,i)=>`<tr data-i="${i}"><td>${esc(r.ad)||'<span class="note">(ad girilmedi)</span>'}</td><td><b>${ROLES[r.rol][0]}</b></td>
+    <td><select aria-label="Sigorta durumu" onchange="setBk('${r.key}','sig',this.value)">${['resmi','sgkli','emekli'].map(v=>`<option value="${v}" ${r.cfg.sig===v?'selected':''}>${v==='resmi'?'Resmî görevli (SGK yok)':v==='sgkli'?"SGK'lı":'Emekli (SGDP)'}</option>`).join('')}</select></td>
+    <td style="text-align:center"><input aria-label="Vergi istisnası" type="checkbox" style="width:auto" ${r.cfg.sig!=='sgkli'?'disabled':''} ${r.cfg.ist!==false?'checked':''} onchange="setBk('${r.key}','ist',this.checked)"></td>
+    <td><input class="brut" aria-label="Brüt ücret" style="width:110px;text-align:right" inputmode="decimal" placeholder="${tl(r.auto)}" value="${esc(r.cfg.brut)}" oninput="setBk('${r.key}','brut',this.value)"></td>
+    <td class="n c-gv"></td><td class="n c-dm"></td><td class="n c-sgk"></td><td class="n c-isz"></td><td class="n c-kes"></td><td class="n c-net"></td><td class="n c-isv"></td></tr>`).join('');
+  $('#bkTable').innerHTML=head+rows+`<tr class="tot" id="bkTot"></tr>`;
+}
+function setBk(key,f,v){ cfgOf(key)[f]=v; save(); if(f==='sig') bordroUI(); render(); }
+
+function bordroSheets(c,R){
+  const T=sumR(R), o=R.filter(r=>!r.fixed);
+  const ttl=`<h2>${esc((S.okul||'').toLocaleUpperCase('tr'))} ÇOCUK KULÜBÜ — AYLIK ÜCRET ÇİZELGESİ</h2><p class="c" style="margin-bottom:4px">${esc(S.ay||'')}</p>`;
+  const foot='<p class="c" style="margin-top:2mm;font-size:8pt">Sayfa {P}/{N}</p>';
+  const sec=t=>`<p class="b" style="margin:6px 0 4px;font-size:11pt">${t}</p>`;
+  const th=`<tr><th>S.No</th><th>Adı Soyadı</th><th>Görevi</th><th>Sigorta</th><th>Brüt ücret</th><th>Gelir v.</th><th>Damga v.</th><th>SGK (işçi)</th><th>İşsizlik</th><th>Kesinti</th><th>NET</th><th>İşveren payı</th><th>İmza</th></tr>`;
+  const row=(r,no)=>`<tr><td>${no}</td><td>${esc(r.ad)}&nbsp;</td><td>${ROLES[r.rol][0]}</td><td>${SIG[r.cfg.sig]}</td><td class="n">${tl(r.b.brut)}</td><td class="n">${tl(r.b.gv)}</td><td class="n">${tl(r.b.damga)}</td><td class="n">${tl(r.b.sgk)}</td><td class="n">${tl(r.b.isz)}</td><td class="n">${tl(r.b.kes)}</td><td class="n"><b>${tl(r.b.net)}</b></td><td class="n">${tl(r.b.isv)}</td><td style="width:28mm">&nbsp;</td></tr>`;
+  const tot=(lbl,t)=>`<tr class="b"><td colspan="4"><b>${lbl}</b></td>${TK.map(x=>`<td class="n"><b>${tl(t[x]||0)}</b></td>`).join('')}<td></td></tr>`;
+  const chunk=(a,n)=>{const r=[];for(let k=0;k<a.length;k+=n)r.push(a.slice(k,k+n));return r.length?r:[[]];};
+  const pages=[];
+  // 1 · gelir dağılımı
+  pages.push(`<div class="sheet land bord">${ttl}${sec('1 · GELİR DAĞILIMI')}<p style="margin:0 0 6px">Tüm öğrenciler: <b>${nf(0).format(c.cnt)}</b> · Aylık toplam aidat geliri: <b>${tl(c.J)} ₺</b>. Müdür, müdür yardımcısı, muhasebe, temizlik, denetim ve temel giderler <b>tüm öğrencilerin</b> ücretlerinden; öğretmen payı yalnızca <b>kendi öğrencilerinden</b> hesaplanır.</p>
+  <table class="bd"><tr><th style="text-align:left">Gider kalemi</th><th>Oran</th><th>Brüt tutar</th><th>Görevli</th></tr>${c.pay.map(p=>`<tr><td>${p.ad}</td><td class="n">%${Math.round(p.o*100)}</td><td class="n">${tl(p.t)} ₺</td><td>${esc(p.ki||'')}</td></tr>`).join('')}
+  <tr class="b"><td><b>TOPLAM</b></td><td class="n"><b>%100</b></td><td class="n"><b>${tl(c.J)} ₺</b></td><td></td></tr></table>${foot}</div>`);
+  // 2 · öğretmen gelirleri
+  const incHead=`<tr><th>Öğretmen</th><th>Öğrenci</th><th>Günlük saat</th><th>İş günü</th><th>Aylık gelir (E×F×G×I)</th><th>Öğretmen payı (%55)</th></tr>`;
+  const inc=r=>`<tr><td>${esc(r.ad)}</td><td class="n">${esc(r.t.cocuk)}</td><td class="n">${esc(r.t.gunluk)}</td><td class="n">${esc(r.t.gun)}</td><td class="n">${tl(r.J)} ₺</td><td class="n">${tl(.55*r.J)} ₺</td></tr>`;
+  const incTot=`<tr class="b"><td><b>TOPLAM</b></td><td class="n"><b>${nf(0).format(c.cnt)}</b></td><td></td><td></td><td class="n"><b>${tl(c.J)} ₺</b></td><td class="n"><b>${tl(.55*c.J)} ₺</b></td></tr>`;
+  const oc=chunk(o,22);
+  oc.forEach((ch,ci)=>pages.push(`<div class="sheet land bord">${ttl}${sec('2 · ÖĞRETMEN GELİRLERİ <span style="font-weight:400;font-size:9pt">(her öğretmen yalnızca kendi öğrencilerinden)</span>')}<table class="bd">${incHead}${ch.length?ch.map(inc).join(''):'<tr><td colspan="6" class="c">Öğretmen yok</td></tr>'}${ci===oc.length-1?incTot:''}</table>${foot}</div>`));
+  // 3 · toplam bordro
+  const summary=`<p class="b" style="margin:6px 0 2px">AYLIK GİDER TOPLAMI</p>
+  <table class="bd" style="width:110mm">
+    <tr><td>Toplam brüt ücret (${R.length} kişi)</td><td class="n">${tl(T.brut)} ₺</td></tr>
+    <tr><td>Gelir vergisi + damga vergisi</td><td class="n">${tl(T.gv+T.damga)} ₺</td></tr>
+    <tr><td>SGK (işçi) + işsizlik kesintisi</td><td class="n">${tl(T.sgk+T.isz)} ₺</td></tr>
+    <tr><td>Net ödenecek tutar</td><td class="n"><b>${tl(T.net)} ₺</b></td></tr>
+    <tr><td>İşveren SGK payı</td><td class="n">${tl(T.isv)} ₺</td></tr>
+    <tr class="b"><td><b>Toplam aylık maliyet (brüt + işveren payı)</b></td><td class="n"><b>${tl(T.brut+T.isv)} ₺</b></td></tr>
+    <tr><td>Aylık aidat geliri</td><td class="n">${tl(c.J)} ₺</td></tr>
+    <tr><td>Gelir − maliyet farkı</td><td class="n">${tl(c.J-T.brut-T.isv)} ₺</td></tr></table>
+  <div style="display:flex;justify-content:space-around;margin-top:8mm;text-align:center"><div>Düzenleyen<br><br><br><b>${esc(S.duzenleyen)||'&nbsp;'}</b></div><div>Onaylayan<br><br><br><b>${esc(S.onaylayan)||'&nbsp;'}</b><br>Okul Müdürü</div></div>`;
+  const bc=chunk(R,20), lastN=bc[bc.length-1].length, sumAlone=lastN>11;
+  bc.forEach((ch,ci)=>{ const st=ci*20, last=ci===bc.length-1;
+    pages.push(`<div class="sheet land bord">${ttl}${sec('3 · TOPLAM BORDRO')}<table class="bd">${th}${ch.map((r,i)=>row(r,st+i+1)).join('')}${last?tot('TOPLAM ('+R.length+' kişi)',T):''}</table>${last&&!sumAlone?summary:''}${foot}</div>`); });
+  if(sumAlone) pages.push(`<div class="sheet land bord">${ttl}${sec('3 · TOPLAM BORDRO — AYLIK GİDER TOPLAMI')}${summary}${foot}</div>`);
+  return {T,pages:pages.map((s,k)=>s.replace(/\{P\}/g,k+1).replace(/\{N\}/g,pages.length))};
+}
+function renderBordro(){
+  const c=calcTotal(), R=bRows(c), B=bordroSheets(c,R), T=B.T;
+  $('#pgBordro').innerHTML=B.pages.join('');
+  $('#bStat').innerHTML=`<div><b>${S.ogr.length}</b><span>Öğretmen</span></div><div><b>${nf(0).format(c.cnt)}</b><span>Toplam öğrenci</span></div><div><b>${tl(c.J)} ₺</b><span>Toplam aylık gelir</span></div><div><b>${tl(T.brut||0)} ₺</b><span>Toplam brüt ücret</span></div><div><b>${tl(T.net||0)} ₺</b><span>Toplam net ödeme</span></div>`;
+  $('#bGelir').innerHTML=`<table class="t"><tr><th>Gider kalemi</th><th class="n">Oran</th><th class="n">Brüt tutar</th></tr>${c.pay.map(p=>`<tr><td>${p.ad}</td><td class="n">%${Math.round(p.o*100)}</td><td class="n">${tl(p.t)} ₺</td></tr>`).join('')}<tr class="tot"><td>TOPLAM</td><td class="n">%100</td><td class="n">${tl(c.J)} ₺</td></tr></table>`;
+  $('#bOgr').innerHTML=`<table class="t"><tr><th>Öğretmen</th><th class="n">Öğrenci</th><th class="n">Günlük saat</th><th class="n">İş günü</th><th class="n">Aylık gelir</th><th class="n">Öğretmen payı (%55)</th></tr>${R.filter(r=>!r.fixed).map(r=>`<tr><td>${esc(r.ad)}</td><td class="n">${esc(r.t.cocuk)}</td><td class="n">${esc(r.t.gunluk)}</td><td class="n">${esc(r.t.gun)}</td><td class="n">${tl(r.J)} ₺</td><td class="n">${tl(.55*r.J)} ₺</td></tr>`).join('')}</table>`;
+  $$('#bkTable tr[data-i]').forEach(tr=>{ const r=R[tr.dataset.i]; if(!r)return; const x=r.b,set=(s,v)=>tr.querySelector(s).textContent=tl(v);
+    set('.c-gv',x.gv);set('.c-dm',x.damga);set('.c-sgk',x.sgk);set('.c-isz',x.isz);set('.c-kes',x.kes);set('.c-net',x.net);set('.c-isv',x.isv);
+    const inp=tr.querySelector('.brut'); inp.placeholder=tl(r.auto); inp.style.borderColor=r.brut>c.K*ROLES[r.rol][1]+.005?'#b4540a':''; });
+  const tot=$('#bkTot'); if(tot) tot.innerHTML=`<td colspan="4">TOPLAM (${R.length} kişi)</td><td class="n">${tl(T.brut||0)}</td>`+TK.slice(1).map(x=>`<td class="n">${tl(T[x]||0)}</td>`).join('');
+  let w=''; const asan=R.filter(r=>r.brut>c.K*ROLES[r.rol][1]+.005).map(r=>r.ad||ROLES[r.rol][0]);
+  if(asan.length) w+=`<p class="warn">⚠ Brüt tavanı aşan: ${asan.map(esc).join(', ')}</p>`;
+  if((T.brut||0)>c.J+.005) w+=`<p class="warn">⚠ Brüt ücret toplamı (${tl(T.brut)} ₺) aylık gelirden (${tl(c.J)} ₺) fazla.</p>`;
+  if(S.ogr.some(t=>!t.ad.trim())) w+='<p class="warn">⚠ Adı girilmemiş öğretmen var.</p>';
+  if($$('#pgBordro .sheet').some(s=>s.scrollHeight>s.clientHeight+2)) w+='<p class="warn">⚠ Bazı satırlar sayfaya sığmıyor; Word çıktısını kullanın.</p>';
+  $('#bUyari').innerHTML=w;
+}
+
+function render(){
+  renderBar();
+  if(S.cur==='okul') renderOkul(); else if(S.cur==='bordro') renderBordro(); else if(S.cur==='toplu') renderToplu(); else renderTeacher();
+  fit();
+}
+
+/* ---------- toplu onay ---------- */
+const uniqA=a=>[...new Set(a.filter(Boolean))];
+function tViewObj(){
+  const ts=S.ogr, same=f=>{const v=uniqA(ts.map(t=>String(t[f]).trim())); return v.length===1?v[0]:null;};
+  return {ogr:ts.map(t=>({ad:t.ad,kadro:t.kadro})),
+    gunler:uniqA(ts.flatMap(t=>String(t.gunler).split(/[,\n]/).map(x=>x.trim()))).join(', '),
+    gunluk:same('gunluk')??'Değişken', gun:same('gun')??'Değişken',
+    cocuk:String(ts.reduce((a,t)=>a+num(t.cocuk),0)), alanlar:uniqA(ts.flatMap(t=>lines(t.alan))).join('\n'),
+    grup:String(ts.length), koordDers:'0'};
+}
+function withTotalView(fn){ const keep=S; S=Object.assign({},keep,tViewObj()); try{return fn();}finally{S=keep;} }
+function totalC(T){
+  const c=calc(), ts=S.ogr_all; // S.ogr bu görünümde sadeleşmiş; toplamlar dışarıdan gelir
+  c.J=T.J; c.I=T.cnt; c.H=T.cnt?T.J/T.cnt:0; c.pay=c.pay.map(p=>({...p,t:T.J*p.o}));
+  c.gr=T.n; c.gunlukDers=T.gd; c.aylikDers=T.ad; c.kd=0; return c;
+}
+function topluTotals(){
+  const T=calcTotal(); T.n=S.ogr.length; T.gd=S.ogr.reduce((a,t)=>a+num(t.gunluk),0); T.ad=S.ogr.reduce((a,t)=>a+num(t.gunluk)*num(t.gun),0); return T;
+}
+function topluSheets(){ const T=topluTotals(); return withTotalView(()=>{const c=totalC(T); return [ek1(c).replace(' id="sheetOnay"',''),ek3(c).replace(' id="sheetEk3"','')];}); }
+function listUI(){
+  const head=`<tr><th>Adı Soyadı</th><th>Kadro</th><th>Etkinlik günleri</th><th>Etkinlik alanları</th><th>Günlük saat</th><th>İş günü</th><th>Öğrenci</th><th>Sigorta</th><th></th></tr>`;
+  const rows=S.ogr.map(t=>`<tr><td><input aria-label="Adı Soyadı" style="min-width:150px" placeholder="Adı Soyadı" value="${esc(t.ad)}" oninput="setT('${t.id}','ad',this.value)"></td>
+    <td><select aria-label="Kadro" onchange="setT('${t.id}','kadro',this.value)">${['Kadrolu','Usta öğretici','Koordinatör'].map(x=>`<option ${t.kadro===x?'selected':''}>${x}</option>`).join('')}</select></td>
+    <td><input aria-label="Günler" style="min-width:120px" value="${esc(t.gunler)}" oninput="setT('${t.id}','gunler',this.value)"></td>
+    <td><input aria-label="Etkinlik alanları" style="min-width:150px" value="${esc(t.alan.replace(/\n/g,', '))}" oninput="setT('${t.id}','alan',this.value)"></td>
+    <td><input aria-label="Günlük saat" style="width:70px" inputmode="decimal" value="${esc(t.gunluk)}" oninput="setT('${t.id}','gunluk',this.value)"></td>
+    <td><input aria-label="İş günü" style="width:70px" inputmode="decimal" value="${esc(t.gun)}" oninput="setT('${t.id}','gun',this.value)"></td>
+    <td><input aria-label="Öğrenci sayısı" style="width:80px" inputmode="numeric" value="${esc(t.cocuk)}" oninput="setT('${t.id}','cocuk',this.value)"></td>
+    <td><select aria-label="Sigorta" onchange="setT('${t.id}','sig',this.value)">${[['resmi','Resmî görevli'],['sgkli',"SGK'lı"],['emekli','Emekli (SGDP)']].map(([v,l])=>`<option value="${v}" ${t.sig===v?'selected':''}>${l}</option>`).join('')}</select></td>
+    <td><button class="btn sec sm" aria-label="Öğretmeni sil" onclick="delTeacherList('${t.id}')">×</button></td></tr>`).join('');
+  $('#listTable').innerHTML=head+rows+`<tr class="tot" id="listTot"></tr>`;
+}
+function setT(id,f,v){ const t=getT(id); if(!t)return; t[f]=f==='alan'?v.split(',').map(x=>x.trim()).filter(Boolean).join('\n'):v; save(); render(); }
+function addTeacherList(){ S.ogr.push(newT()); save(); listUI(); render(); }
+function delTeacherList(id){ if(S.ogr.length<=1){showMsg('En az bir öğretmen satırı kalmalı.');return;} S.ogr=S.ogr.filter(t=>t.id!==id); save(); listUI(); render(); }
+function renderToplu(){
+  const T=topluTotals(); const r=withTotalView(()=>{const c=totalC(T); return {on:ek1(c),e3:ek3(c)};});
+  $('#pgTOnay').innerHTML=r.on; $('#pgTEk3').innerHTML=r.e3;
+  const sh=$('#pgTOnay .sheet'); const f=fitEk1(sh); sh.removeAttribute('id');
+  const e3=$('#pgTEk3 .sheet'); if(e3) e3.removeAttribute('id');
+  $('#tpFit').innerHTML=f.over?'<span class="pill warn">⚠ EK-1 tek sayfaya sığmıyor</span>':'<span class="pill ok">✓ EK-1 tek sayfa'+(f.pt<9.8?' (yazı '+f.pt+' pt oldu)':'')+'</span>';
+  $('#tpStat').innerHTML=`<div><b>${T.n}</b><span>Öğretmen</span></div><div><b>${nf(0).format(T.cnt)}</b><span>Toplam öğrenci</span></div><div><b>${tl(T.J)} ₺</b><span>Toplam aylık gelir</span></div><div><b>${tl(.55*T.J)} ₺</b><span>Öğretmen payları toplamı (%55)</span></div>`;
+  let w=''; if(S.ogr.some(t=>!t.ad.trim())) w+='<p class="warn">⚠ Adı girilmemiş öğretmen var; onayda tüm öğretmenlerin ismi gerekir.</p>';
+  if(!T.ok) w+=`<p class="warn">⚠ Saat ücreti sınır dışında (${tl(T.C)} ₺ – ${tl(T.D)} ₺).</p>`;
+  $('#tpUyari').innerHTML=w;
+  const tot=$('#listTot'); if(tot){ tot.innerHTML=`<td colspan="4">TOPLAM (${T.n} öğretmen)</td><td class="n">${tl(T.gd)}</td><td></td><td class="n">${nf(0).format(T.cnt)}</td><td colspan="2">${tl(T.J)} ₺</td>`; }
+}
+async function wordToplu(){
+  const T=topluTotals(); let bytes; try{ bytes=docxPack(withTotalView(()=>wordPart(totalC(T),true))+LAND); }catch(e){ showMsg('Word dosyası oluşturulamadı: '+e.message); return; }
+  await saveFile('toplu-onay.docx',new Blob([bytes],{type:DOCX_MIME}));
+}
+
+/* ---------- yazdırma ---------- */
+function teacherSheets(t){ return withView(t,()=>{const c=calc(); return [ek1(c).replace(' id="sheetOnay"',''),ek3(c).replace(' id="sheetEk3"','')];}); }
+function preparePrint(scope){
+  const pa=$('#printArea'); let html='';
+  if(scope==='bordro'){ const c=calcTotal(); html=bordroSheets(c,bRows(c)).pages.join(''); }
+  else if(scope==='toplu') html=topluSheets().join('');
+  else if(scope==='hepsi') html=S.ogr.map(teacherSheets).flat().join('');
+  else { const t=getT(S.cur)||S.ogr[0]; html=teacherSheets(t).join(''); }
+  pa.innerHTML=html; pa.style.cssText='display:block;position:absolute;left:-99999px;top:0;width:297mm';
+  pa.querySelectorAll('.sheet.ek1').forEach(fitEk1); pa.style.cssText='';
+}
+let printed=false;
+window.addEventListener('beforeprint',()=>{printed=true; if(!$('#printArea').innerHTML.trim()) preparePrint(S.cur==='bordro'?'bordro':S.cur==='toplu'?'toplu':getT(S.cur)?'ogr':'hepsi');});
+window.addEventListener('afterprint',()=>{$('#printArea').innerHTML='';});
+function printDoc(scope){ preparePrint(scope); printed=false; try{window.print()}catch(e){}
+  setTimeout(()=>{ if(!printed){ $('#printArea').innerHTML=''; showMsg('Yazdırma bu sayfada engelli. "Yazdırılabilir HTML indir" veya Word butonunu kullanın; indirdiğiniz dosyayı açıp yazdırabilirsiniz.'); } },700); }
+function showMsg(t){ let m=document.getElementById('msgBar'); if(!m){m=document.createElement('div');m.id='msgBar';m.setAttribute('role','status');m.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.3);z-index:50;font-size:13px';document.body.appendChild(m);} m.textContent=t; m.style.display='block'; clearTimeout(m._t); m._t=setTimeout(()=>m.style.display='none',9000); }
+
+/* ---------- Word ---------- */
+function docxPack(body){
+  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  return zipStore([
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+    {name:'word/document.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${body}</w:body></w:document>`}
+  ]);
+}
+const LAND='<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="567" w:right="567" w:bottom="567" w:left="567" w:header="300" w:footer="300" w:gutter="0"/></w:sectPr>';
+const DOCX_MIME='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+function buildDocx(list){ return docxPack(list.map((t,i)=>withView(t,()=>wordPart(calc(),i===list.length-1))).join('')+LAND); }
+function bordroWordBody(){
+  const c=calcTotal(),R=bRows(c),T=sumR(R),BL='D6DCE4';
+  const brk='<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  const head=t=>WP(WR((S.okul||'').toLocaleUpperCase('tr')+' ÇOCUK KULÜBÜ — AYLIK ÜCRET ÇİZELGESİ',{b:1,sz:24}),{jc:'center'})+WP(WR(S.ay||'',{sz:18}),{jc:'center',after:80})+WP(WR(t,{b:1,sz:22}),{before:60,after:80});
+  const ct=(w,t,o={})=>WC(w,WP(WR(t,{b:o.b,sz:o.sz||16}),{jc:o.jc||'left'}),{fill:o.fill,span:o.span});
+  const nr=(w,t,o={})=>ct(w,t,{...o,jc:'right'});
+  const wG=[7400,1500,2800,4004];
+  const p1=head('1 · GELİR DAĞILIMI')+WP(WR(`Tüm öğrenciler: ${nf(0).format(c.cnt)} · Aylık toplam aidat geliri: ${tl(c.J)} ₺. Müdür, müdür yardımcısı, muhasebe, temizlik, denetim ve temel giderler tüm öğrencilerin ücretlerinden; öğretmen payı yalnızca kendi öğrencilerinden hesaplanır.`,{sz:16}),{after:100})+
+    WT(wG,[WRW([ct(wG[0],'Gider kalemi',{b:1,fill:BL}),ct(wG[1],'Oran',{b:1,fill:BL,jc:'center'}),nr(wG[2],'Brüt tutar',{b:1,fill:BL}),ct(wG[3],'Görevli',{b:1,fill:BL})]),
+      ...c.pay.map(p=>WRW([ct(wG[0],p.ad),ct(wG[1],'%'+Math.round(p.o*100),{jc:'center'}),nr(wG[2],tl(p.t)+' ₺'),ct(wG[3],p.ki||'',{sz:14})],360)),
+      WRW([ct(wG[0],'TOPLAM',{b:1}),ct(wG[1],'%100',{b:1,jc:'center'}),nr(wG[2],tl(c.J)+' ₺',{b:1}),ct(wG[3],'')])])+WP('',{line:20});
+  const o=R.filter(r=>!r.fixed), wO=[4700,1800,2000,1800,3000,2404];
+  const oh=['Öğretmen','Öğrenci','Günlük saat','İş günü','Aylık gelir (E×F×G×I)','Öğretmen payı (%55)'];
+  const p2=head('2 · ÖĞRETMEN GELİRLERİ (her öğretmen yalnızca kendi öğrencilerinden)')+WT(wO,[
+    WRW(oh.map((t,i)=>ct(wO[i],t,{b:1,fill:BL,jc:i?'right':'left'}))),
+    ...(o.length?o.map(r=>WRW([ct(wO[0],r.ad),nr(wO[1],r.t.cocuk),nr(wO[2],r.t.gunluk),nr(wO[3],r.t.gun),nr(wO[4],tl(r.J)+' ₺'),nr(wO[5],tl(.55*r.J)+' ₺')],360)):[WRW([ct(15704,'Öğretmen yok',{span:6})])]),
+    WRW([ct(wO[0],'TOPLAM',{b:1}),nr(wO[1],nf(0).format(c.cnt),{b:1}),ct(wO[2],''),ct(wO[3],''),nr(wO[4],tl(c.J)+' ₺',{b:1}),nr(wO[5],tl(.55*c.J)+' ₺',{b:1})])])+WP('',{line:20});
+  const wB=[600,2300,2000,1300,1100,1050,950,1050,950,1050,1150,1100,1104];
+  const bh=['S.No','Adı Soyadı','Görevi','Sigorta','Brüt ücret','Gelir v.','Damga v.','SGK (işçi)','İşsizlik','Kesinti','NET','İşveren payı','İmza'];
+  const rowsB=R.map((r,i)=>WRW([ct(wB[0],String(i+1)),ct(wB[1],r.ad),ct(wB[2],ROLES[r.rol][0],{sz:14}),ct(wB[3],SIG[r.cfg.sig],{sz:14}),...TK.map((x,k)=>nr(wB[4+k],tl(r.b[x]),{b:x==='net'})),ct(wB[12],'')],380));
+  const sumRows=[['Toplam brüt ücret ('+R.length+' kişi)',T.brut],['Gelir vergisi + damga vergisi',T.gv+T.damga],['SGK (işçi) + işsizlik kesintisi',T.sgk+T.isz],['Net ödenecek tutar',T.net],['İşveren SGK payı',T.isv],['Toplam aylık maliyet (brüt + işveren payı)',T.brut+T.isv],['Aylık aidat geliri',c.J],['Gelir − maliyet farkı',c.J-T.brut-T.isv]];
+  const nb=(w,t)=>WC(w,t,{border:false});
+  const p3=head('3 · TOPLAM BORDRO')+WT(wB,[WRW(bh.map((t,i)=>ct(wB[i],t,{b:1,fill:BL,jc:i>3&&i<12?'right':'left',sz:14}))),...rowsB,
+      WRW([ct(wB[0]+wB[1]+wB[2]+wB[3],'TOPLAM ('+R.length+' kişi)',{b:1,span:4}),...TK.map((x,k)=>nr(wB[4+k],tl(T[x]||0),{b:1})),ct(wB[12],'')])])+WP('',{before:100,line:20})+
+    WP(WR('AYLIK GİDER TOPLAMI',{b:1,sz:18}),{before:80,after:40})+
+    WT([6500,2400],sumRows.map(([t,v])=>WRW([ct(6500,t),nr(2400,tl(v)+' ₺',{b:/Net|Toplam aylık/.test(t)})])))+WP('',{line:20})+
+    WT([7852,7852],[WRW([nb(7852,WP(WR('Düzenleyen',{sz:16}),{jc:'center',before:120})+WP(WR(S.duzenleyen||'',{b:1,sz:16}),{jc:'center',before:240})),nb(7852,WP(WR('Onaylayan',{sz:16}),{jc:'center',before:120})+WP(WR(S.onaylayan||'',{b:1,sz:16}),{jc:'center',before:240})+WP(WR('Okul Müdürü',{sz:16}),{jc:'center'}))])])+WP('',{line:20});
+  return p1+brk+p2+brk+p3+LAND;
+}
+async function wordBordro(){
+  let bytes; try{ bytes=docxPack(bordroWordBody()); }catch(e){ showMsg('Word dosyası oluşturulamadı: '+e.message); return; }
+  await saveFile('toplam-bordro.docx',new Blob([bytes],{type:DOCX_MIME}));
+}
+function printableHTML(sheets,title){
+  const css=document.querySelector('style').textContent;
+  return '<!doctype html><html lang="tr" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title><style>'+css+'\nbody{background:#e9e6df;padding:12px}.sheet{margin:0 auto 12px;box-shadow:0 2px 8px rgba(0,0,0,.2)}.hint{max-width:210mm;margin:0 auto 10px;font:13px sans-serif;color:#333}@media print{body{background:#fff;padding:0}.sheet{margin:0;box-shadow:none}.hint{display:none}}</style></head><body><p class="hint">Yazdırma penceresi açılmazsa Ctrl+P tuşuna basın; hedef olarak "PDF olarak kaydet"i seçebilirsiniz.</p>'+sheets+'<scr'+'ipt>addEventListener("load",function(){setTimeout(function(){try{print()}catch(e){}},500)})</scr'+'ipt></body></html>';
+}
+async function downloadPrintable(scope){
+  preparePrint(scope); const pa=$('#printArea'); const html=pa.innerHTML; pa.innerHTML='';
+  const name=scope==='bordro'?'toplam-bordro-yazdir.html':scope==='toplu'?'toplu-onay-yazdir.html':scope==='hepsi'?'tum-onaylar-yazdir.html':'onay-'+safe((getT(S.cur)||{}).ad)+'-yazdir.html';
+  await saveFile(name,printableHTML(html,name.replace('.html','')),'text/html;charset=utf-8');
+}
+async function saveFile(filename,data,mime){
+  let d=null; try{ d=window.claude&&await claude.use('downloads'); }catch(e){}
+  if(d){ try{ await d.save({filename,data}); }catch(e){ if(e&&e.code!=='declined') showMsg('Dosya kaydedilemedi: '+(e.message||e.code)); } return; }
+  if(window.self!==window.top){ showMsg('Bu paylaşım bağlantısında dosya indirme yalnızca kuruluş üyelerine açık. Programı HTML dosyası olarak kullanın: dosyayı gönderen kişiden isteyin, çift tıklayıp açın; orada indirme ve yazdırma sorunsuz çalışır.'); return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data],{type:mime})); a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+}
+async function wordDoc(list,name){
+  let bytes; try{ bytes=buildDocx(list); }catch(e){ showMsg('Word dosyası oluşturulamadı: '+e.message); return; }
+  await saveFile(name,new Blob([bytes],{type:DOCX_MIME}));
+}
+function safe(s){return String(s||'').trim().replace(/[^\wÇĞİÖŞÜçğıöşü-]+/g,'_')||'ogretmen';}
+function wordTeacher(){ const t=getT(S.cur); if(t) wordDoc([t],'onay-'+safe(t.ad)+'.docx'); }
+function wordAll(){ wordDoc(S.ogr,'onay-tum-ogretmenler.docx'); }
+async function csvBordro(){
+  const c=calcTotal(),R=bRows(c),T=sumR(R); const n2=x=>(Math.round(x*100)/100).toFixed(2).replace('.',',');
+  const q=s=>{s=String(s??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+  const hd=['S.No','Adı Soyadı','Görevi','Sigorta','Brüt ücret','Gelir v.','Damga v.','SGK (işçi)','İşsizlik','Kesinti','NET','İşveren payı'];
+  const rows=[[q((S.okul||'')+' Çocuk Kulübü — '+(S.ay||''))],hd.map(q),
+    ...R.map((r,i)=>[i+1,q(r.ad),q(ROLES[r.rol][0]),q(SIG[r.cfg.sig]),...TK.map(x=>n2(r.b[x]))]),
+    ['',q('TOPLAM'),'','',...TK.map(x=>n2(T[x]||0))],[],
+    [q('Gider kalemi'),q('Oran'),q('Brüt tutar')],...c.pay.map(p=>[q(p.ad),q('%'+Math.round(p.o*100)),n2(p.t)]),[],
+    [q('Öğretmen'),q('Öğrenci'),q('Aylık gelir'),q('Öğretmen payı')],...R.filter(r=>!r.fixed).map(r=>[q(r.ad),q(r.t.cocuk),n2(r.J),n2(.55*r.J)])];
+  await saveFile('toplam-bordro.csv','\ufeff'+rows.map(r=>r.join(';')).join('\r\n'),'text/csv;charset=utf-8');
+}
+
+/* ---------- yedek ---------- */
+async function exportData(){ await saveFile('bucuk-kulup-yedek.json',JSON.stringify({v:1,S},null,1),'application/json'); }
+function applyBackup(d){
+  const s=d&&d.S; if(!s||typeof s!=='object'){showMsg('Geçersiz yedek.');return;}
+  const n={}; PKEYS.concat(['tarih','veli','ay']).forEach(k=>{if(typeof s[k]==='string')n[k]=s[k];});
+  if(Array.isArray(s.ogr)) n.ogr=s.ogr; if(s.bset&&typeof s.bset==='object'&&!Array.isArray(s.bset)) n.bset=s.bset;
+  Object.assign(S,n); save(); location.reload();
+}
+function showBackupText(){ $('#bkTxt').value=JSON.stringify({v:1,S}); }
+async function copyBackupText(){
+  const t=$('#bkTxt'); if(!t.value) showBackupText();
+  try{ await navigator.clipboard.writeText(t.value); showMsg('Kopyalandı. Bir not defterine veya mesaja yapıştırıp saklayın.'); }
+  catch(e){ t.focus(); t.select(); let ok=false; try{ok=document.execCommand('copy');}catch(_){} showMsg(ok?'Kopyalandı.':'Metin seçildi; Ctrl+C ile kopyalayın.'); }
+}
+function loadBackupText(){ let d; try{d=JSON.parse($('#bkTxt').value);}catch(e){showMsg('Metin geçerli bir yedek değil.');return;} applyBackup(d); }
+function importData(inp){
+  const f=inp.files&&inp.files[0]; if(!f) return;
+  f.text().then(txt=>{
+    let d; try{d=JSON.parse(txt)}catch(e){showMsg('Dosya okunamadı.');return;}
+    applyBackup(d);
+  }).catch(()=>showMsg('Dosya okunamadı.'));
+}
+
+/* ---------- sıfırlama ---------- */
+let resetArmed=false;
+function resetAll(){ const b=$('#btnReset');
+  if(!resetArmed){ resetArmed=true; b.textContent='Emin misiniz? Tekrar tıklayın'; setTimeout(()=>{resetArmed=false;b.textContent='Öğretmenleri sıfırla';},4000); return; }
+  S.ogr=[newT()]; S.bset={}; S.cur='okul'; save(); location.reload(); }
+let forgetArmed=false;
+function forgetSchool(){ const b=$('#btnForget');
+  if(!forgetArmed){ forgetArmed=true; b.textContent='Emin misiniz? Tekrar tıklayın'; setTimeout(()=>{forgetArmed=false;b.textContent='Kayıtlı okul bilgilerini sil';},4000); return; }
+  try{localStorage.removeItem(STORE);localStorage.removeItem(PSTORE)}catch(e){} location.reload(); }
+
+$$('label').forEach((l,n)=>{const f=l.parentElement&&l.parentElement.querySelector('input,select,textarea'); if(!f||l.htmlFor)return; if(!f.id)f.id='f'+n; l.htmlFor=f.id;});
+bind(); showView(S.cur);
+</script>
+</body>
+</html>
