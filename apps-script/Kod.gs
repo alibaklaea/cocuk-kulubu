@@ -25,6 +25,7 @@ function kurulum() {
     if (ad !== 'Ayarlar') sh.getRange(1, 1, sh.getMaxRows(), SAYFALAR[ad].length).setNumberFormat('@'); // telefonun baştaki 0'ı ve numaralar metin kalsın
   });
   var ay = ss.getSheetByName('Ayarlar');
+  if (!ay.getRange('B3').getValue()) ay.getRange('A3:B3').setValues([['Geçerli kulüp ücretleri (TL, virgülle; dekonttaki fazlası masraf sayılır)', '1650, 3300']]);
   if (!ay.getRange('B2').getValue()) {
     ay.getRange('A2:B2').setValues([['Kayıt kodu (okullara siz verin)', 'KULUP-' + Math.floor(1000 + Math.random() * 9000)]]);
   }
@@ -197,7 +198,8 @@ var ISLEMLER = {
     if (b.dekontNo && satirlar_('Dekontlar').some(function (d) { return d.okulId === okul.okulId && String(d.dekontNo) === String(b.dekontNo); }))
       return { yinelenen: true, bilgi: b, metin: metin.slice(0, 1500) };
     var es = eslestir_(b, metin, ogrs), d = { okulId: okul.okulId, dekId: id_(), dekontNo: b.dekontNo, tarih: b.tarih, tutar: b.tutar, gonderen: b.gonderen,
-      aciklama: b.aciklama, ogrIdler: es.kesin.join(','), durum: es.kesin.length ? 'Eşleşti' : 'Kontrol bekliyor', adaylar: es.adaylar.join(','), dosyaAdi: g.ad || '', yuklenme: new Date().toISOString() };
+      aciklama: b.aciklama, ogrIdler: es.kesin.join(','), durum: es.kesin.length ? (b.ucretUyumlu ? 'Eşleşti' : 'Eşleşti (tutarı kontrol edin)') : 'Kontrol bekliyor', adaylar: es.adaylar.join(','), dosyaAdi: g.ad || '', yuklenme: new Date().toISOString() };
+    d.masraf = b.masraf; // sayfaya yazılmaz, öğrencinin notuna eklenir
     ekle_('Dekontlar', d);
     if (es.kesin.length) odendiIsaretle_(okul, es.kesin, d);
     return { dekont: d, liste: liste_(okul), dekontlar: dekListe_(okul), metin: es.kesin.length ? '' : metin.slice(0, 1500) };
@@ -226,13 +228,14 @@ function odendiIsaretle_(okul, ids, d) {
   satirlar_('Ogrenciler').forEach(function (y) {
     if (y.okulId !== okul.okulId || ids.indexOf(y.ogrId) < 0) return;
     y.durum = 'Ödendi'; y.dekontNo = d.dekontNo || '(numara okunamadı)'; y.odemeTarihi = d.tarih; y.tutar = d.tutar;
-    if (ids.length > 1) y.not = 'Kardeşlerle tek dekont'; yaz_('Ogrenciler', y);
+    y.not = [ids.length > 1 ? 'Kardeşlerle tek dekont' : '', d.masraf ? 'Masraf ' + d.masraf + ' TL' : ''].filter(String).join(' · ');
+    yaz_('Ogrenciler', y);
   });
 }
 function odemeKaldir_(okul, ids, no) {
   satirlar_('Ogrenciler').forEach(function (y) {
     if (y.okulId !== okul.okulId || ids.indexOf(y.ogrId) < 0 || String(y.dekontNo) !== String(no || '(numara okunamadı)')) return;
-    y.durum = 'Ödenmedi'; y.dekontNo = ''; y.odemeTarihi = ''; y.tutar = ''; if (y.not === 'Kardeşlerle tek dekont') y.not = ''; yaz_('Ogrenciler', y);
+    y.durum = 'Ödenmedi'; y.dekontNo = ''; y.odemeTarihi = ''; y.tutar = ''; y.not = String(y.not || '').replace(/Kardeşlerle tek dekont|Masraf [0-9.,]+ TL/g, '').replace(/^[ ·]+|[ ·]+$/g, ''); yaz_('Ogrenciler', y);
   });
 }
 
@@ -245,42 +248,69 @@ function ocr_(blob) {
 }
 
 function deger_(metin, etiketler) {
+  // "Etiket : değer" aynı satırda ya da "Etiket" / ": değer" alt alta (Akbank) olabilir
   var satir = metin.split(/\r?\n/);
   for (var e = 0; e < etiketler.length; e++) {
-    var re = new RegExp('(?:^|\\s)' + etiketler[e] + '\\s*[:：]?\\s*(.*)$', 'i');
+    var re = new RegExp('(?:^|\\s)' + etiketler[e] + '\\s*([:：]?)\\s*(.*)$', 'i');
     for (var i = 0; i < satir.length; i++) {
-      var m = satir[i].match(re);
-      if (m) {
-        var v = m[1].split(/\s{3,}|\s+(?:İŞLEM|VALÖR|REFERANS|TARİH|TUTAR|IBAN)\b/i)[0].trim();
-        if (!v && satir[i + 1]) v = satir[i + 1].trim();
-        if (v && v !== '-' && v !== ':') return v;
-      }
+      var m = satir[i].match(re); if (!m) continue;
+      var v = m[2].split(/\s{2,}|\s+(?:İŞLEM|VALÖR|REFERANS|TARİH|TUTAR|IBAN)\b/i)[0].trim();
+      if (!v && satir[i + 1] && /^\s*[:：]/.test(satir[i + 1])) v = satir[i + 1].replace(/^\s*[:：]\s*/, '').trim();
+      if (v && v !== '-' && v !== ':' && !/^B[İI]LG[İI]LER[İI](\s|$)/i.test(v)) return v; // "GÖNDERİCİ BİLGİLERİ" başlığı ad değildir
     }
   }
   return '';
 }
-function dekontAyristir_(metin) {
-  var T = metin.replace(/ /g, ' ');
-  var no = deger_(T, ['DEKONT NO', 'SORGU NO', 'İŞLEM NO', 'İŞLEM REFERANS(?:I|ı)?(?: NO)?', 'REFERANS NO', 'FAST SORGU NO', 'BİMREF[- ]SERİSIRANO', 'BELGE NO', 'REFERANS', 'İşlem No', 'Dekont No']);
-  no = (no.match(/[A-Z0-9][A-Z0-9.\-\/]{4,}/i) || [''])[0];
-  var tarihHam = deger_(T, ['İŞLEM TARİHİ', 'İşlem Tarihi', 'TARİH', 'Tarih']) || T;
-  var tm = tarihHam.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/) || T.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
-  var tarih = tm ? ('0' + tm[1]).slice(-2) + '.' + ('0' + tm[2]).slice(-2) + '.' + tm[3] : '';
-  var tu = ''; // etiketin geçtiği satırın tamamında ilk para değeri
-  ['İŞLEM TUTARI', 'İşlem Tutarı', 'TOPLAM', 'TUTAR', 'Tutar', 'Gönderilen Tutar'].some(function (et) {
-    return T.split(/\r?\n/).some(function (s) {
-      var i = s.indexOf(et); if (i < 0) return false;
-      var m = s.slice(i).match(/\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|\d+(?=\s*(?:TL|₺))/); if (m) tu = m[0]; return !!m;
-    });
-  });
-  return { dekontNo: no, tarih: tarih, tutar: tutarNorm_(tu), gonderen: deger_(T, ['GÖNDEREN(?: AD[I]? ?SOYAD[I]?)?', 'Gönderen', 'GÖNDEREN ADI', 'AD SOYAD']).replace(/\s+IBAN.*$/i, ''),
-    aciklama: deger_(T, ['AÇIKLAMA', 'Açıklama', 'ÖDEME AÇIKLAMASI', 'Mesaj']) };
+function paraDegerleri_(T) { // metindeki tüm para tutarları (1.650,00 · 1,650.00 · 1650,00 · 1650 TL)
+  var r = [], re = /(\d{1,3}(?:\.\d{3})+,\d{2}|\d{1,3}(?:,\d{3})+\.\d{2}|\d+[.,]\d{2}|\d+(?=\s*(?:TL|₺)))(?!\d)/g, m;
+  while ((m = re.exec(T))) r.push(paraSayi_(m[1]));
+  return r.filter(function (x) { return x > 0; });
 }
-function tutarNorm_(s) {
-  if (!s) return '';
-  var m = s.match(/^(.*?)[.,](\d{2})$/), tam = m ? m[1] : s, kurus = m ? m[2] : '00';
-  tam = tam.replace(/[.,]/g, '');
-  return Number(tam).toLocaleString('tr-TR') + ',' + kurus;
+function paraSayi_(s) {
+  var m = String(s).match(/^(.*?)[.,](\d{2})$/), tam = m ? m[1] : String(s);
+  return Number(tam.replace(/[.,]/g, '')) + (m ? Number(m[2]) / 100 : 0);
+}
+function paraYaz_(n) { return n ? n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''; }
+function ucretler_() { // Ayarlar!B3: geçerli kulüp ücretleri, ör. "1650, 3300"
+  var v = String(sayfa_('Ayarlar').getRange('B3').getValue() || '1650, 3300');
+  return v.split(/[;,\s]+/).map(paraSayi_).filter(function (x) { return x > 0; });
+}
+var AÇIKLAMA_ANAHTAR = /sınıf|sinif|öğrenci|ogrenci|kulüp|kulup|ücret|ucret|aidat|velisi|\b\d\s*[\/-]?\s*[A-ZÇĞİÖŞÜ]\b/i;
+var BASLIK_SATIRI = /BİLGİLERİ|BILGILERI|DEKONT|HAVALE|EFT|FAST|TUTAR|TOPLAM|KOMİSYON|BSMV|MEVDUAT|YALNIZ|ŞUBE|Şube|Adres|Vergi|VKN|TCKN|www\.|Mersis|Genel Müdürlük|İMZA|İmza|Valör|Referans|Müşteri|Hesap No|Unvan|İşlem|ANTALYA|ANKARA|İSTANBUL|A\.Ş\.|T\.A\.Ş/;
+function aciklamaBul_(T) {
+  var v = deger_(T, ['AÇIKLAMA', 'Açıklama', 'ÖDEME AÇIKLAMASI', 'Ödeme Açıklaması', 'Mesaj', 'MESAJ']);
+  if (v) return v;
+  // Başlıksız açıklama (Akbank vb.): IBAN'ın altındaki serbest satır ya da "sınıf/öğrenci/kulüp" geçen satır
+  var s = T.split(/\r?\n/).map(function (x) { return x.trim(); }), aday = [];
+  for (var i = 0; i < s.length; i++) {
+    var x = s[i], sonraki = s[i + 1] || '';
+    if (!x || /^[:：]/.test(x) || /^[:：]/.test(sonraki) || BASLIK_SATIRI.test(x) || !/[A-Za-zÇĞİÖŞÜçğıöşü]{2,}.*\s+[A-Za-zÇĞİÖŞÜçğıöşü]{2,}/.test(x)) continue;
+    var ibanAlti = i > 0 && /TR\s?\d{2}[\d\s]{18,}/.test(s[i - 1]);
+    if (AÇIKLAMA_ANAHTAR.test(x)) return x;
+    if (ibanAlti) aday.push(x);
+  }
+  return aday[0] || '';
+}
+function dekontAyristir_(metin) {
+  var T = String(metin).replace(/ /g, ' ');
+  var no = deger_(T, ['DEKONT NO', 'SORGU NO', 'İŞLEM NO', 'İŞLEM REFERANS(?:I|ı)?(?: NO)?', 'REFERANS NO', 'FAST SORGU NO', 'BİMREF[- ]SERİSIRANO', 'BELGE NO', 'REFERANS', 'Referans', 'İşlem No', 'Dekont No', 'Sorgu No']);
+  no = (no.match(/^[A-Z0-9.\-\/]*\d[A-Z0-9.\-\/]*/i) || [''])[0]; // etiketin hemen ardındaki değer (TCKN gibi uzaktaki sayılar alınmasın) if (no.replace(/\D/g, '').length < 5) no = '';
+  var tarihHam = deger_(T, ['İŞLEM TARİHİ', 'İşlem Tarihi(?:\/Saati)?', 'TARİH', 'Tarih']) || T;
+  var tm = tarihHam.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})(?:[\s\-]*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/) || T.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})(?:[\s\-]*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  var g2 = function (x) { return ('0' + x).slice(-2); };
+  var tarih = tm ? g2(tm[1]) + '.' + g2(tm[2]) + '.' + tm[3] : '';
+  var gonderen = deger_(T, ['GÖNDEREN(?: AD[I]? ?SOYAD[I]?)?', 'Gönderen(?: Adı Soyadı)?', 'GÖNDERİCİ', 'Gönderici', 'Adı Soyadı\/Unvan', 'ADI SOYADI\/UNVAN', 'İşlemi Yapan Ad-Soyad', 'AD SOYAD']).replace(/\s+IBAN.*$/i, '');
+  // numarasız dekont: işlem tarihi + saati + gönderen kimlik olur (aynı dekont iki kez işlenmesin)
+  if (!no && tm && tm[4]) no = 'T' + tm[3] + g2(tm[2]) + g2(tm[1]) + '-' + g2(tm[4]) + tm[5] + (tm[6] || '00');
+  // tutar: dekonttaki tutarlardan kulüp ücretine (1650, 3300 ya da katları) eşit olan; fazlası masraf/komisyondur
+  var degerler = paraDegerleri_(T), ucret = ucretler_(), birim = Math.min.apply(null, ucret);
+  var uygun = degerler.filter(function (x) { return ucret.some(function (u) { return Math.abs(x - u) < 0.005; }) || (Math.abs(x / birim - Math.round(x / birim)) < 1e-6 && x / birim >= 1 && x / birim <= 5); });
+  var tutar = uygun.length ? uygun[0] : 0, toplam = degerler.length ? Math.max.apply(null, degerler) : 0;
+  if (!tutar) { // ücretle eşleşen yoksa etiketli tutar (komisyon/masraf/toplam dışı)
+    T.split(/\r?\n/).some(function (s) { if (!/TUTAR|Tutar/.test(s) || /TOPLAM|KOMİSYON|MASRAF|BSMV/i.test(s)) return false; var d = paraDegerleri_(s); if (d.length) tutar = d[0]; return !!d.length; });
+  }
+  return { dekontNo: no, tarih: tarih, tutar: paraYaz_(tutar), ucretUyumlu: !!uygun.length, masraf: tutar && toplam > tutar ? paraYaz_(Math.round((toplam - tutar) * 100) / 100) : '',
+    gonderen: gonderen, aciklama: aciklamaBul_(T) };
 }
 
 // ---------- öğrenci eşleştirme ----------
@@ -296,6 +326,9 @@ function eslestir_(b, metin, ogrs) {
   var adlar = acikTam.map(function (o) { return norm_(o.adSoyad); });
   if (acikTam.length && adlar.every(function (a, i) { return adlar.indexOf(a) === i; })) return { kesin: acikTam.map(function (o) { return o.ogrId; }), adaylar: [] };
   if (acikTam.length) return { kesin: [], adaylar: acikTam.map(function (o) { return o.ogrId; }) }; // aynı adlı iki öğrenci: elle seçilsin
+  // veli ikinci adı yazmamış olabilir: açıklamada ilk ad + soyad geçen tek öğrenci
+  var adSoyad = ogrs.filter(function (o) { var k = kelimeler_(o.adSoyad); return k.length >= 2 && ack.indexOf(k[0]) >= 0 && ack.indexOf(k[k.length - 1]) >= 0; });
+  if (adSoyad.length === 1) return { kesin: [adSoyad[0].ogrId], adaylar: [] };
   // açıklamada yoksa: tüm metinde tam ad (gönderen kendisi değilse) ve tek öğrenci
   var metinTam = ogrs.filter(function (o) { var k = kelimeler_(o.adSoyad); return k.length >= 2 && icerir_(tum, k) && !icerir_(gon, k); });
   if (metinTam.length === 1) return { kesin: [metinTam[0].ogrId], adaylar: [] };
