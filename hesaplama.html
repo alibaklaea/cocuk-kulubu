@@ -305,6 +305,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid transparent}
     <p class="note" style="margin:0 0 8px">Buradaki her satır, ilgili öğretmenin kendi sekmesiyle aynı bilgidir. Etkinlik alanlarını virgülle ayırın.</p>
     <div class="scroll"><table class="t" id="listTable"></table></div>
     <div class="actions" style="margin-top:10px"><button class="btn sec" onclick="addTeacherList()">+ Öğretmen ekle</button></div>
+    <details style="margin-top:12px"><summary><b>Toplu öğretmen ekle</b> (listeden yapıştır)</summary>
+      <p class="note" style="margin:8px 0">Her satıra bir öğretmen yazın: <b>Adı Soyadı - Etkinlik alanları</b> (alanları virgülle ayırın). Excel'den iki sütun (ad, alanlar) da yapıştırabilirsiniz. Listede zaten olan öğretmenin yalnız eksik alanları eklenir.</p>
+      <textarea id="topluOgr" rows="7" style="width:100%;font:inherit" placeholder="AYŞE YILMAZ - Satranç, Akıl Oyunları&#10;MEHMET DEMİR - Matematik-1"></textarea>
+      <div class="actions" style="margin-top:8px"><button class="btn" onclick="topluOgretmenEkle()">Öğretmenleri ekle</button></div>
+    </details>
   </div>
 </div>
 <div class="stage" id="stageP">
@@ -831,6 +836,20 @@ function listUI(){
 }
 function setT(id,f,v){ const t=getT(id); if(!t)return; t[f]=f==='alan'?v.split(',').map(x=>x.trim()).filter(Boolean).join('\n'):v; save(); render(); }
 function addTeacherList(){ S.ogr.push(newT()); save(); listUI(); render(); }
+function topluOgretmenEkle(){
+  const ta=$('#topluOgr'), key=s=>s.trim().replace(/\s+/g,' ').toLocaleUpperCase('tr');
+  let yeni=0,gunc=0;
+  for(const satir of ta.value.split(/\r?\n/)){
+    const m=satir.split(/\t|\s[-–—:]\s|;/); const ad=(m.shift()||'').trim().replace(/\s+/g,' '); if(!ad) continue;
+    const alan=m.join(',').split(',').map(x=>x.trim()).filter(Boolean);
+    let t=S.ogr.find(x=>key(x.ad)===key(ad));
+    if(t){ const eski=lines(t.alan), ek=alan.filter(a=>!eski.some(e=>key(e)===key(a))); if(ek.length){t.alan=eski.concat(ek).join('\n');gunc++;} continue; }
+    t=S.ogr.find(x=>!x.ad.trim()&&!x.alan.trim()&&!x.cocuk.trim()) || (S.ogr.push(newT()),S.ogr[S.ogr.length-1]);
+    t.ad=ad; t.alan=alan.join('\n'); yeni++;
+  }
+  save(); listUI(); render(); ta.value='';
+  showMsg(yeni||gunc?`${yeni} öğretmen eklendi${gunc?`, ${gunc} öğretmenin alanı güncellendi`:''}.`:'Eklenecek yeni öğretmen bulunamadı.');
+}
 function delTeacherList(id){ if(S.ogr.length<=1){showMsg('En az bir öğretmen satırı kalmalı.');return;} S.ogr=S.ogr.filter(t=>t.id!==id); save(); listUI(); render(); }
 function renderToplu(){
   const T=topluTotals(); const r=withTotalView(()=>{const c=totalC(T); return {on:ek1(c),e3:ek3(c)};});
