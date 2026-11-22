@@ -258,7 +258,7 @@ function deger_(metin, etiketler) {
     for (var i = 0; i < satir.length; i++) {
       var m = satir[i].match(re); if (!m) continue;
       var v = m[2].split(/\s{2,}|\s+(?:İŞLEM|VALÖR|REFERANS|TARİH|TUTAR|IBAN)\b/i)[0].trim();
-      if (/^/s*(UNVAN)?$/i.test(v)) v = '';
+      if (/^\/\s*(UNVAN)?$/i.test(v)) v = '';
       if (!v && satir[i + 1] && /^\s*[:：]/.test(satir[i + 1])) v = satir[i + 1].replace(/^\s*[:：]\s*/, '').trim();
       else if (!v && !m[1]) { // Vakıfbank: "ETİKET" satırı, değer alt satırda (araya "UNVAN" girebilir)
         for (var j = i + 1; j < Math.min(i + 3, satir.length); j++) {
