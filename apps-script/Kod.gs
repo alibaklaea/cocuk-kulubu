@@ -1,19 +1,21 @@
 /**
  * Çocuk Kulübü Uygulaması · Google Drive arka ucu (Google Apps Script)
  * Veriler bu betiğin bağlı olduğu Google E-Tablo'da durur. Her okul yalnızca kendi satırlarını görür.
- * Kayıt kodu: "Ayarlar" sayfasındaki B2 hücresi (okullara bu kodu siz verirsiniz).
+ * Kayıt kodu: kodUret() çalıştırın; "Kodlar" sayfasına tek kullanımlık 10 kod yazar, her okula birini verin.
+ * (Kodlar sayfası yokken Ayarlar!B2'deki ortak kod geçerlidir.)
  * Dekontlar Google Drive'ın yazı okuma (OCR) özelliğiyle okunur; dosya okunduktan hemen sonra silinir, yalnızca bilgiler kalır.
  */
 
 var SAYFALAR = {
   Ayarlar: ['Ayar', 'Değer'],
-  Okullar: ['okulId', 'okulAdi', 'kullanici', 'sifreOzet', 'tuz', 'kayitZamani'],
+  Okullar: ['okulId', 'okulAdi', 'kullanici', 'sifreOzet', 'tuz', 'kayitZamani', 'eposta', 'uyelikBitis'],
   Oturumlar: ['token', 'okulId', 'sonKullanim', 'kullanici'],
   Ogrenciler: ['okulId', 'ogrId', 'adSoyad', 'sinif', 'sube', 'veliTel', 'dersler', 'ucret', 'durum', 'dekontNo', 'odemeTarihi', 'tutar', 'not'],
   Dekontlar: ['okulId', 'dekId', 'dekontNo', 'tarih', 'tutar', 'gonderen', 'aciklama', 'ogrIdler', 'durum', 'adaylar', 'dosyaAdi', 'yuklenme'],
   Veri: ['okulId', 'anahtar', 'json', 'guncelleme']
 };
 var OTURUM_GUN = 30;
+var UCRETSIZ_BITIS = '31.08.2027'; // 2026-2027 öğretim yılı ücretsiz; okul okul Okullar!uyelikBitis'ten değişir
 
 // ---------- kurulum (bir kez Çalıştır) ----------
 function kurulum() {
@@ -43,6 +45,29 @@ function tablo_() {
   return ss;
 }
 function sayfa_(ad) { return tablo_().getSheetByName(ad); }
+function baslikTamam_() { // sonradan eklenen sütunların başlığı (eski tabloda yoksa yazılır)
+  var r = sayfa_('Okullar').getRange(1, 1, 1, SAYFALAR.Okullar.length);
+  if (r.getValues()[0].join('|') !== SAYFALAR.Okullar.join('|')) r.setValues([SAYFALAR.Okullar]);
+}
+var EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// Yönetici bu işlevi Apps Script'ten çalıştırır: 10 tek kullanımlık kayıt kodu
+function kodUret() {
+  var ss = tablo_(), sh = ss.getSheetByName('Kodlar') || ss.insertSheet('Kodlar'), L = [];
+  if (sh.getLastRow() === 0) sh.appendRow(['kod', 'kime verildi', 'kullanan okul', 'zaman']);
+  for (var i = 0; i < 10; i++) L.push('KULUP-' + Utilities.getUuid().replace(/-/g, '').slice(0, 8).toUpperCase());
+  sh.getRange(sh.getLastRow() + 1, 1, L.length, 1).setNumberFormat('@').setValues(L.map(function (k) { return [k]; }));
+  Logger.log(L.join('\n'));
+}
+function kodSatiri_(kod) { // tek kullanımlık kod: satır no; geçersizse 0; Kodlar sayfası yoksa -1
+  var sh = sayfa_('Kodlar'); if (!sh || sh.getLastRow() < 2) return -1;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
+  for (var i = 0; i < v.length; i++) if (kod && String(v[i][0]).trim().toUpperCase() === kod && !v[i][2]) return i + 2;
+  return 0;
+}
+// "=" ya da "+" ile başlayan yazı tabloda formül olarak çalışmasın
+function hucre_(x) { return typeof x === 'string' && /^[=+]/.test(x) ? "'" + x : x; }
+var AKTIF_OKUL = null;
 
 // ---------- web uç noktası ----------
 function doGet() { return json_({ ok: true, ad: 'Çocuk Kulübü API' }); }
@@ -56,6 +81,7 @@ function doPost(e) {
     if (!islem) throw hata_('Bilinmeyen işlem.');
     var okul = null;
     if (islem.oturum !== false) okul = oturumOkul_(g.token);
+    AKTIF_OKUL = okul;
     return json_({ ok: true, veri: islem.f(g, okul) });
   } catch (err) {
     return json_({ ok: false, hata: err && err.kullanici ? err.message : 'Sunucu hatası: ' + err });
@@ -71,8 +97,8 @@ function satirlar_(ad) {
   var sh = sayfa_(ad), v = sh.getDataRange().getValues(), b = v[0];
   return v.slice(1).map(function (r, i) { var o = { _satir: i + 2 }; b.forEach(function (k, j) { o[k] = r[j]; }); return o; });
 }
-function ekle_(ad, o) { sayfa_(ad).appendRow(SAYFALAR[ad].map(function (k) { return o[k] === undefined ? '' : o[k]; })); }
-function yaz_(ad, o) { sayfa_(ad).getRange(o._satir, 1, 1, SAYFALAR[ad].length).setValues([SAYFALAR[ad].map(function (k) { return o[k] === undefined ? '' : o[k]; })]); }
+function ekle_(ad, o) { sayfa_(ad).appendRow(SAYFALAR[ad].map(function (k) { return o[k] === undefined ? '' : hucre_(o[k]); })); }
+function yaz_(ad, o) { sayfa_(ad).getRange(o._satir, 1, 1, SAYFALAR[ad].length).setValues([SAYFALAR[ad].map(function (k) { return o[k] === undefined ? '' : hucre_(o[k]); })]); }
 function sil_(ad, satirNolar) { var sh = sayfa_(ad); satirNolar.sort(function (a, b) { return b - a; }).forEach(function (n) { sh.deleteRow(n); }); }
 function id_() { return Utilities.getUuid().replace(/-/g, '').slice(0, 12); }
 function ozet_(sifre, tuz) {
@@ -95,25 +121,32 @@ function oturumOkul_(token) {
 function oturumAc_(okul) {
   var t = Utilities.getUuid() + Utilities.getUuid();
   ekle_('Oturumlar', { token: t, okulId: okul.okulId, sonKullanim: new Date().toISOString(), kullanici: okul.kullanici });
-  return { token: t, okul: { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: okul.kullanici } };
+  return { token: t, okul: { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: okul.kullanici, eposta: okul.eposta || '', uyelikBitis: okul.uyelikBitis || UCRETSIZ_BITIS } };
 }
 
 // ---------- işlemler ----------
 var ISLEMLER = {
   kayit: { oturum: false, f: function (g) {
-    if (!kayitKodu_() || String(g.kayitKodu || '').trim() !== kayitKodu_()) throw hata_('Kayıt kodu hatalı. Kodu kulüp koordinatöründen alın.');
+    var kod = String(g.kayitKodu || '').trim().toUpperCase(), ks = kodSatiri_(kod);
+    if (ks === 0 || (ks < 0 && (!kayitKodu_() || kod !== kayitKodu_().toUpperCase()))) throw hata_('Kayıt kodu hatalı. Kodu kulüp koordinatöründen alın.');
     var ad = String(g.okulAdi || '').trim(), k = kucuk_(g.kullanici), s = String(g.sifre || '');
     if (ad.length < 3) throw hata_('Okul adını yazın.');
     if (!/^[a-z0-9._-]{3,30}$/.test(k)) throw hata_('Kullanıcı adı 3-30 karakter olmalı; yalnız küçük harf (Türkçe karakter olmadan), rakam, nokta, tire.');
-    if (s.length < 6) throw hata_('Şifre en az 6 karakter olmalı.');
+    var ep = String(g.eposta || '').trim().toLowerCase(); if (!EPOSTA.test(ep)) throw hata_('Geçerli bir e-posta adresi yazın.');
+    if (s.length < 8) throw hata_('Şifre en az 8 karakter olmalı.');
+    baslikTamam_();
     if (satirlar_('Okullar').some(function (x) { return x.kullanici === k; })) throw hata_('Bu kullanıcı adı alınmış.');
-    var tuz = id_() + id_(), okul = { okulId: id_(), okulAdi: ad, kullanici: k, sifreOzet: ozet_(s, tuz), tuz: tuz, kayitZamani: new Date().toISOString() };
+    var tuz = id_() + id_(), okul = { okulId: id_(), okulAdi: ad, kullanici: k, sifreOzet: ozet_(s, tuz), tuz: tuz, kayitZamani: new Date().toISOString(), eposta: ep, uyelikBitis: UCRETSIZ_BITIS };
     ekle_('Okullar', okul);
+    if (ks > 0) sayfa_('Kodlar').getRange(ks, 3, 1, 2).setValues([[hucre_(ad + ' (' + k + ')'), new Date().toISOString()]]);
     return oturumAc_(okul);
   } },
   giris: { oturum: false, f: function (g) {
     var k = kucuk_(g.kullanici), okul = satirlar_('Okullar').filter(function (x) { return x.kullanici === k; })[0];
-    if (!okul || ozet_(String(g.sifre || ''), okul.tuz) !== okul.sifreOzet) { Utilities.sleep(800); throw hata_('Kullanıcı adı ya da şifre hatalı.'); }
+    var bellek = CacheService.getScriptCache(), ba = 'deneme:' + k.slice(0, 40), deneme = Number(bellek.get(ba) || 0);
+    if (deneme >= 8) throw hata_('Çok fazla hatalı deneme yapıldı. 15 dakika sonra yeniden deneyin.');
+    if (!okul || ozet_(String(g.sifre || ''), okul.tuz) !== okul.sifreOzet) { bellek.put(ba, String(deneme + 1), 900); Utilities.sleep(800); throw hata_('Kullanıcı adı ya da şifre hatalı.'); }
+    bellek.remove(ba);
     return oturumAc_(okul);
   } },
   cikis: { f: function (g) {
@@ -127,10 +160,10 @@ var ISLEMLER = {
   kullaniciEkle: { f: function (g, okul) {
     var k = kucuk_(g.kullanici), s = String(g.sifre || '');
     if (!/^[a-z0-9._-]{3,30}$/.test(k)) throw hata_('Kullanıcı adı 3-30 karakter olmalı; yalnız küçük harf (Türkçe karakter olmadan), rakam, nokta, tire.');
-    if (s.length < 6) throw hata_('Şifre en az 6 karakter olmalı.');
+    if (s.length < 8) throw hata_('Şifre en az 8 karakter olmalı.');
     if (satirlar_('Okullar').some(function (x) { return x.kullanici === k; })) throw hata_('Bu kullanıcı adı alınmış.');
     var tuz = id_() + id_();
-    ekle_('Okullar', { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: k, sifreOzet: ozet_(s, tuz), tuz: tuz, kayitZamani: new Date().toISOString() });
+    ekle_('Okullar', { okulId: okul.okulId, okulAdi: okul.okulAdi, kullanici: k, sifreOzet: ozet_(s, tuz), tuz: tuz, kayitZamani: new Date().toISOString(), uyelikBitis: okul.uyelikBitis || '' });
     return ISLEMLER.kullanicilar.f(g, okul);
   } },
   kullaniciSil: { f: function (g, okul) {
@@ -140,9 +173,13 @@ var ISLEMLER = {
     sil_('Oturumlar', satirlar_('Oturumlar').filter(function (y) { return y.okulId === okul.okulId && y.kullanici === k; }).map(function (y) { return y._satir; }));
     return ISLEMLER.kullanicilar.f(g, okul);
   } },
+  epostaKaydet: { f: function (g, okul) {
+    var ep = String(g.eposta || '').trim().toLowerCase(); if (!EPOSTA.test(ep)) throw hata_('Geçerli bir e-posta adresi yazın.');
+    baslikTamam_(); okul.eposta = ep; okul.uyelikBitis = okul.uyelikBitis || UCRETSIZ_BITIS; yaz_('Okullar', okul); return { eposta: ep };
+  } },
   sifreDegistir: { f: function (g, okul) {
     if (ozet_(String(g.eski || ''), okul.tuz) !== okul.sifreOzet) throw hata_('Mevcut şifre hatalı.');
-    if (String(g.yeni || '').length < 6) throw hata_('Yeni şifre en az 6 karakter olmalı.');
+    if (String(g.yeni || '').length < 8) throw hata_('Yeni şifre en az 8 karakter olmalı.');
     okul.tuz = id_() + id_(); okul.sifreOzet = ozet_(String(g.yeni), okul.tuz); yaz_('Okullar', okul); return true;
   } },
 
@@ -157,7 +194,7 @@ var ISLEMLER = {
       for (var i = 0; i < json.length || i === 0; i += 40000) parca.push(json.slice(i, i + 40000));
       sil_('Veri', satirlar_('Veri').filter(function (y) { return y.okulId === okul.okulId && String(y.anahtar).indexOf(a + '#') === 0; }).map(function (y) { return y._satir; }));
       var sh = sayfa_('Veri'), z = new Date().toISOString();
-      sh.getRange(sh.getLastRow() + 1, 1, parca.length, 4).setValues(parca.map(function (x, i) { return [okul.okulId, a + '#' + i, x, z]; }));
+      sh.getRange(sh.getLastRow() + 1, 1, parca.length, 4).setValues(parca.map(function (x, i) { return [okul.okulId, hucre_(a + '#' + i), hucre_(x), z]; }));
     });
     return true;
   } },
@@ -184,7 +221,7 @@ var ISLEMLER = {
       var x = tum.filter(function (y) { return norm_(y.adSoyad) === norm_(ad) && String(y.sinif) === String(o.sinif || ''); })[0];
       if (x) { ['sube', 'veliTel', 'dersler', 'ucret'].forEach(function (k) { if (o[k]) x[k] = String(o[k]); }); yaz_('Ogrenciler', x); gunc++; }
       else { var y = { okulId: okul.okulId, ogrId: id_(), adSoyad: ad, sinif: String(o.sinif || ''), sube: String(o.sube || ''), veliTel: String(o.veliTel || ''), dersler: String(o.dersler || ''), ucret: String(o.ucret || ''), durum: 'Ödenmedi' };
-        ekRows.push(SAYFALAR.Ogrenciler.map(function (k) { return y[k] === undefined ? '' : y[k]; })); tum.push(y); yeni++; }
+        ekRows.push(SAYFALAR.Ogrenciler.map(function (k) { return y[k] === undefined ? '' : hucre_(y[k]); })); tum.push(y); yeni++; }
     });
     if (ekRows.length) sh.getRange(sh.getLastRow() + 1, 1, ekRows.length, ekRows[0].length).setValues(ekRows);
     return { yeni: yeni, guncellenen: gunc, liste: liste_(okul) };
@@ -283,7 +320,11 @@ function paraSayi_(s) {
   return Number(tam.replace(/[.,]/g, '')) + (m ? Number(m[2]) / 100 : 0);
 }
 function paraYaz_(n) { return n ? n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''; }
-function ucretler_() { // Ayarlar!B3: geçerli kulüp ücretleri, ör. "1650, 3300"
+function ucretler_() { // okulun kendi ders ücreti (Hesabım) → 1, 2, 3 ders; yoksa Ayarlar!B3
+  if (AKTIF_OKUL) try {
+    var y = satirlar_('Veri').filter(function (x) { return x.okulId === AKTIF_OKUL.okulId && x.anahtar === 'kulup-ayar#0'; })[0], u = y && Number(JSON.parse(y.json).dersUcreti);
+    if (u > 0) return [u, u * 2, u * 3];
+  } catch (e) {}
   var v = String(sayfa_('Ayarlar').getRange('B3').getValue() || '1650, 3300');
   return v.split(/[;,\s]+/).map(paraSayi_).filter(function (x) { return x > 0; });
 }

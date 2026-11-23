@@ -361,7 +361,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid transparent}
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STORE='bucuk-ogretmen-v1', PSTORE='bucuk-ogretmen-okul', OLD_PSTORE='bucuk-cocuk-kulubu-okul';
-const DEF={okul:'Bucuk İlkokulu',oabGorev:'Okul Aile Birliği Başkanı',olurUnvan:'İl/İlçe Millî Eğitim Müdürü',
+let OKUL_ADI=''; try{OKUL_ADI=((JSON.parse(localStorage.getItem('kulup.oturum')||'{}')||{}).okul||{}).okulAdi||'';}catch(e){}
+const DEF={okul:OKUL_ADI,oabGorev:'Okul Aile Birliği Başkanı',olurUnvan:'İl/İlçe Millî Eğitim Müdürü',
   katsayi:'1,575512',gosterge:'140',yemek:'0',saat:'45',asgari:'33030',gvIst:'4211,33',gvOran:'15'};
 const PKEYS=['okul','mudur','mudyrd','koord','oab','oabGorev','sube','ilceMem','olurUnvan','denetim','yazisma','temizlik','salon','atolye','derslik','digerMekan','katsayi','gosterge','yemek','saat','asgari','gvIst','gvOran','duzenleyen','onaylayan'];
 let S={}; try{S=JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){}
@@ -971,7 +972,7 @@ async function csvBordro(){
 }
 
 /* ---------- yedek ---------- */
-async function exportData(){ await saveFile('bucuk-kulup-yedek.json',JSON.stringify({v:1,S},null,1),'application/json'); }
+async function exportData(){ await saveFile('kulup-yedek.json',JSON.stringify({v:1,S},null,1),'application/json'); }
 function applyBackup(d){
   const s=d&&d.S; if(!s||typeof s!=='object'){showMsg('Geçersiz yedek.');return;}
   const n={}; PKEYS.concat(['tarih','veli','ay']).forEach(k=>{if(typeof s[k]==='string')n[k]=s[k];});

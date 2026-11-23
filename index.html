@@ -82,7 +82,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
 <section id="giris" hidden>
   <div class="kart">
     <h1>Çocuk Kulübü Uygulaması</h1>
-    <div class="not">Ücret hesaplama, evrak, öğrenci listesi ve dekont takibi. Her okul yalnızca kendi verisini görür.</div>
+    <div class="not">Ücret hesaplama, evrak, öğrenci listesi ve dekont takibi. Her okul yalnızca kendi verisini görür.<br><b>2026-2027 öğretim yılında ücretsizdir.</b> Sonraki yıl ücretli olacaktır; yenilemeden önce e-postayla bilgi verilir.</div>
     <div class="sekme" role="tablist"><button data-gs="giris" aria-selected="true">Giriş</button><button data-gs="kayit" aria-selected="false">Okul kaydı</button></div>
     <form id="fGiris" onsubmit="event.preventDefault()">
       <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required></label>
@@ -90,12 +90,14 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
       <div class="dugmeler"><button class="btn ana">Giriş yap</button></div>
     </form>
     <form id="fKayit" hidden onsubmit="event.preventDefault()">
-      <label>Kayıt kodu<input name="kayitKodu" required placeholder="Kulüp koordinatöründen alın"></label>
-      <label>Okul adı<input name="okulAdi" required placeholder="ör. Bucuk İlkokulu"></label>
-      <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required placeholder="ör. bucuk.ilkokulu"></label>
+      <label>Kayıt kodu<input name="kayitKodu" required placeholder="Size verilen tek kullanımlık kod"></label>
+      <label>Okul adı<input name="okulAdi" required placeholder="ör. Atatürk İlkokulu"></label>
+      <label>E-posta<input name="eposta" type="email" autocomplete="email" required placeholder="okulunuz@ornek.com"></label>
+      <div class="not">Yalnızca üyelik ve program duyuruları için kullanılır.</div>
+      <label>Kullanıcı adı<input name="kullanici" autocomplete="username" required placeholder="ör. ataturk.ilkokulu"></label>
       <div class="not">Küçük harf, Türkçe karakter olmadan; rakam, nokta ve tire kullanılabilir.</div>
-      <label>Şifre (en az 6 karakter)<input name="sifre" type="password" autocomplete="new-password" minlength="6" required></label>
-      <label>Şifre (tekrar)<input name="sifre2" type="password" autocomplete="new-password" minlength="6" required></label>
+      <label>Şifre (en az 8 karakter)<input name="sifre" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Şifre (tekrar)<input name="sifre2" type="password" autocomplete="new-password" minlength="8" required></label>
       <div class="dugmeler"><button class="btn ana">Okulu kaydet</button></div>
     </form>
     <div class="hata" id="girisHata"></div>
@@ -149,9 +151,23 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     <div class="bolum" id="b-hesapim" hidden>
       <div class="kart" style="max-width:460px">
         <h3 style="margin-top:0" id="hesapBaslik"></h3>
+        <div class="not" id="uyelik"></div>
+        <form id="fEposta" onsubmit="event.preventDefault()">
+          <label>E-posta<input name="eposta" type="email" autocomplete="email" required></label>
+          <div class="dugmeler"><button class="btn ana">E-postayı kaydet</button></div>
+        </form>
+        <div class="hata" id="epostaHata"></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+        <form id="fUcret" onsubmit="event.preventDefault()">
+          <label>Bir dersin ücreti (TL)<input name="ucret" inputmode="decimal" placeholder="ör. 1650" required></label>
+          <div class="not">Velinin bir ders için ödediği tutar. Dekontun kaç dersi karşıladığı buna göre bulunur.</div>
+          <div class="dugmeler"><button class="btn ana">Ücreti kaydet</button></div>
+        </form>
+        <div class="hata" id="ucretHata"></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
         <form id="fSifre" onsubmit="event.preventDefault()">
           <label>Mevcut şifre<input name="eski" type="password" autocomplete="current-password" required></label>
-          <label>Yeni şifre<input name="yeni" type="password" autocomplete="new-password" minlength="6" required></label>
+          <label>Yeni şifre<input name="yeni" type="password" autocomplete="new-password" minlength="8" required></label>
           <div class="dugmeler"><button class="btn ana">Şifreyi değiştir</button></div>
         </form>
         <div class="hata" id="sifreHata"></div>
@@ -161,7 +177,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
         <ul id="kulListe" style="padding-left:18px"></ul>
         <form id="fKul" onsubmit="event.preventDefault()">
           <div class="izgara2"><label>Yeni kullanıcı adı<input name="kullanici" required placeholder="ör. yasin.yildiz" autocomplete="off"></label>
-          <label>Şifresi<input name="sifre" type="password" minlength="6" required autocomplete="new-password"></label></div>
+          <label>Şifresi<input name="sifre" type="password" minlength="8" required autocomplete="new-password"></label></div>
           <div class="dugmeler"><button class="btn ana">Kullanıcı ekle</button></div>
         </form>
         <div class="hata" id="kulHata"></div>
@@ -233,7 +249,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   $("#fKayit").onsubmit = async (e) => {
     e.preventDefault(); const f = new FormData(e.target);
     if (f.get("sifre") !== f.get("sifre2")) { $("#girisHata").textContent = "Şifreler aynı değil."; return; }
-    try { girisTamam(await api("kayit", { kayitKodu: f.get("kayitKodu"), okulAdi: f.get("okulAdi"), kullanici: f.get("kullanici"), sifre: f.get("sifre") })); } catch (x) { $("#girisHata").textContent = x.message; }
+    try { girisTamam(await api("kayit", { kayitKodu: f.get("kayitKodu"), okulAdi: f.get("okulAdi"), eposta: f.get("eposta"), kullanici: f.get("kullanici"), sifre: f.get("sifre") })); } catch (x) { $("#girisHata").textContent = x.message; }
   };
   async function girisTamam(o) {
     HESAP_ANAHTAR.forEach(ls.del); // önceki okulun hesaplama verisi kalmasın
@@ -265,10 +281,13 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   async function baslat() {
     $("#giris").hidden = true; $("#uyg").hidden = false;
     $("#okulAdi").textContent = "· " + oturum.okul.okulAdi; $("#hesapBaslik").textContent = `${oturum.okul.okulAdi} (${oturum.okul.kullanici})`;
+    $("#uyelik").textContent = "Üyelik: ücretsiz · " + (oturum.okul.uyelikBitis || "31.08.2027") + " tarihine kadar"; $("#fEposta").eposta.value = oturum.okul.eposta || ""; $("#epostaHata").textContent = "";
     try {
       const [ogr, dek, veri] = await Promise.all([api("ogrenciler", {}, true), api("dekontlar", {}, true), api("veriGetir", {}, true)]);
       OGR = ogr; DEK = dek;
       HESAP_ANAHTAR.forEach((k) => { if (veri[k]) ls.set(k, veri[k]); });
+      try { DERS_UCRETI = +JSON.parse(veri["kulup-ayar"] || "{}").dersUcreti || 0; } catch (x) { DERS_UCRETI = 0; }
+      $("#fUcret").ucret.value = DERS_UCRETI || ""; $("#ucretHata").textContent = "";
       sonKayit = hesapAnlik();
       ogrCiz(); dekCiz();
       api("kullanicilar", {}, true).then(kulCiz).catch(() => {});
@@ -306,13 +325,22 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   }
   const adaGore = (a, b) => String(a.adSoyad).localeCompare(String(b.adSoyad), "tr") || String(a.sinif).localeCompare(String(b.sinif), "tr");
   // Katılımcı = öğrenci × ders. İki derse giden öğrenci iki katılımcıdır; her satır bir katılımcı.
-  const DERS_UCRETI = +(window.KULUP_AYAR || {}).DERS_UCRETI || 1650;
+  let DERS_UCRETI = 0; // okulun Hesabım'da girdiği ders ücreti
+  $("#fEposta").onsubmit = async (e) => {
+    e.preventDefault();
+    try { const r = await api("epostaKaydet", { eposta: e.target.eposta.value }); oturum.okul.eposta = r.eposta; ls.set("kulup.oturum", JSON.stringify(oturum)); $("#epostaHata").textContent = "Kaydedildi."; } catch (x) { $("#epostaHata").textContent = x.message; }
+  };
+  $("#fUcret").onsubmit = async (e) => {
+    e.preventDefault(); const u = sayi(e.target.ucret.value);
+    if (!(u > 0)) { $("#ucretHata").textContent = "Geçerli bir ücret yazın."; return; }
+    try { await api("veriKaydet", { kayitlar: { "kulup-ayar": JSON.stringify({ dersUcreti: u }) } }); DERS_UCRETI = u; ogrCiz(); $("#ucretHata").textContent = "Kaydedildi."; } catch (x) { $("#ucretHata").textContent = x.message; }
+  };
   const dersAdlari = (o) => [...new Set(String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean))];
   function katilimcilar() {
     return OGR.flatMap((o) => {
       const D = dersAdlari(o), t = sayi(o.tutar);
-      // Ödenen tutar kaç dersi karşılıyorsa, yazılış sırasıyla o kadar ders ödenmiş sayılır (tutar yoksa 1 ders)
-      const odenen = o.durum === "Ödendi" ? Math.max(1, Math.floor((t + 0.5) / DERS_UCRETI)) : 0;
+      // Ödenen tutar kaç dersi karşılıyorsa, yazılış sırasıyla o kadar ders ödenmiş sayılır (tutar ya da ücret girilmemişse 1 ders)
+      const odenen = o.durum === "Ödendi" ? Math.max(1, DERS_UCRETI ? Math.floor((t + 0.5) / DERS_UCRETI) : 1) : 0;
       return (D.length ? D : [""]).map((ders, i) => ({ o, ders, odendi: i < odenen, dersSayisi: D.length }));
     });
   }
@@ -330,7 +358,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     const od = kapsam.filter((k) => k.odendi).length, kisi = new Set(kapsam.map((k) => k.o)).size;
     $("#ozet").innerHTML = `<div><b>${kapsam.length}</b><span>Katılımcı (${kisi} öğrenci)</span></div><div><b style="color:var(--ok)">${od}</b><span>Ödeyen katılımcı</span></div>
       <div><b style="color:var(--bad)">${kapsam.length - od}</b><span>Ödemeyen katılımcı</span></div><div><b>${tl(OGR.filter((o) => o.durum === "Ödendi").reduce((s, o) => s + sayi(o.tutar), 0))}</b><span>Dekontlardaki toplam (tüm okul)</span></div>
-      <div><b>${DEK.filter((d) => /Kontrol/.test(d.durum)).length}</b><span>Kontrol bekleyen dekont</span></div>`;
+      <div><b>${DEK.filter((d) => /Kontrol/.test(d.durum)).length}</b><span>Kontrol bekleyen dekont</span></div>` + (DERS_UCRETI ? "" : `<div style="border-color:var(--warn)"><b>!</b><span>Hesabım bölümünden bir dersin ücretini girin</span></div>`);
     $("#ogrTablo").innerHTML = L.length ? L.map(({ o, ders, odendi, dersSayisi }, i) => `<tr><td>${i + 1}</td><td><b>${esc(o.adSoyad)}</b></td><td>${esc(o.sinif)}</td><td>${esc(o.sube)}</td><td>${esc(o.veliTel)}</td><td>${esc(ders)}${dersSayisi > 1 ? ` <small class="not">(${dersSayisi} ders)</small>` : ""}</td><td>${esc(o.ucret)}</td>
       <td><span class="rozet ${odendi ? "ok" : "yok"}">${odendi ? "Ödendi" : "Ödenmedi"}</span></td><td>${odendi ? esc(o.dekontNo) : ""}</td><td>${odendi ? esc(o.odemeTarihi) : ""}</td><td>${odendi ? esc(o.tutar) : ""}</td><td>${esc(o.not)}</td>
       <td style="white-space:nowrap"><button class="btn kucuk" data-duz="${esc(o.ogrId)}">Düzenle</button> <button class="btn kucuk tehlike" data-sil="${esc(o.ogrId)}" data-ders="${esc(ders)}">Sil</button></td></tr>`).join("")
