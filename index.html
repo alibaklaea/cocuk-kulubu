@@ -127,7 +127,8 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
         <button class="btn" id="disaBtn">Excel'e indir</button>
         <input type="file" id="aktarDosya" accept=".xlsx,.xls,.csv" hidden>
       </div>
-      <div class="tablo-kap"><table><thead><tr><th>#</th><th>Ad Soyad</th><th>Sınıf</th><th>Şube</th><th>Veli tel</th><th>Ders(ler)</th><th>Ücret</th><th>Durum</th><th>Dekont no</th><th>Ödeme tarihi</th><th>Tutar</th><th>Not</th><th></th></tr></thead><tbody id="ogrTablo"></tbody></table></div>
+      <div class="tablo-kap"><table><thead><tr><th>#</th><th>Ad Soyad</th><th>Sınıf</th><th>Şube</th><th>Veli tel</th><th>Ders</th><th>Ücret</th><th>Durum</th><th>Dekont no</th><th>Ödeme tarihi</th><th>Tutar</th><th>Not</th><th></th></tr></thead><tbody id="ogrTablo"></tbody></table></div>
+      <p class="not">Her satır bir <b>katılımcıdır</b>: iki derse giden öğrenci iki kez sayılır. Ödenen tutar kaç dersi karşılıyorsa o kadar ders “Ödendi” görünür; tek ders ödendiyse “Ders(ler)” kutusunda ilk yazılan ders ödenmiş sayılır. Sil, yalnız o satırdaki dersi siler.</p>
       <p class="not">Excel'den aktarırken ilk satır başlık olmalı. Tanınan başlıklar: Ad Soyad (ya da Öğrenci), Sınıf, Şube, Veli Tel (ya da Telefon), Ders (ya da Kurs), Ücret. Aynı ad ve sınıftaki öğrenci tekrar eklenmez, bilgileri güncellenir.</p>
     </div>
 
@@ -300,31 +301,45 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   function dersler() { return [...new Set(OGR.flatMap((o) => String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean)))].sort((a, b) => a.localeCompare(b, "tr")); }
   // Öğretmen → dersleri: Hesaplama bölümündeki öğretmen kayıtlarından okunur
   const dersAnahtar = (d) => String(d || "").replace(/\s*\(.*?\)\s*/g, " ").trim().toLocaleUpperCase("tr");
-  const dersParca = (o) => String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean).map(dersAnahtar);
   function ogretmenler() {
     try { return ((JSON.parse(ls.get("bucuk-ogretmen-v1") || "{}") || {}).ogr || []).filter((t) => t && String(t.ad || "").trim()).map((t) => ({ ad: String(t.ad).trim(), dersler: String(t.alan || "").split(/\n|,/).map(dersAnahtar).filter(Boolean) })); } catch (e) { return []; }
   }
   const adaGore = (a, b) => String(a.adSoyad).localeCompare(String(b.adSoyad), "tr") || String(a.sinif).localeCompare(String(b.sinif), "tr");
+  // Katılımcı = öğrenci × ders. İki derse giden öğrenci iki katılımcıdır; her satır bir katılımcı.
+  const DERS_UCRETI = +(window.KULUP_AYAR || {}).DERS_UCRETI || 1650;
+  const dersAdlari = (o) => [...new Set(String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean))];
+  function katilimcilar() {
+    return OGR.flatMap((o) => {
+      const D = dersAdlari(o), t = sayi(o.tutar);
+      // Ödenen tutar kaç dersi karşılıyorsa, yazılış sırasıyla o kadar ders ödenmiş sayılır (tutar yoksa 1 ders)
+      const odenen = o.durum === "Ödendi" ? Math.max(1, Math.floor((t + 0.5) / DERS_UCRETI)) : 0;
+      return (D.length ? D : [""]).map((ders, i) => ({ o, ders, odendi: i < odenen, dersSayisi: D.length }));
+    });
+  }
   function ogrCiz() {
-    const OT = ogretmenler(), so = $("#fOgrt").value;
-    $("#fOgrt").innerHTML = '<option value="">Tüm öğretmenler</option>' + OT.map((t) => { const L = OGR.filter((o) => dersParca(o).some((d) => t.dersler.includes(d))); return `<option value="${esc(t.ad)}" ${t.ad === so ? "selected" : ""}>${esc(t.ad)} (${L.length} öğrenci)</option>`; }).join("");
+    const KAT = katilimcilar(), OT = ogretmenler(), so = $("#fOgrt").value;
+    const say = (L) => `${L.length} katılımcı, ${L.filter((k) => k.odendi).length} ödeyen`;
+    const otKat = (t, L) => L.filter((k) => t.dersler.includes(dersAnahtar(k.ders)));
+    $("#fOgrt").innerHTML = '<option value="">Tüm öğretmenler</option>' + OT.map((t) => `<option value="${esc(t.ad)}" ${t.ad === so ? "selected" : ""}>${esc(t.ad)} (${say(otKat(t, KAT))})</option>`).join("");
     const ot = OT.find((t) => t.ad === $("#fOgrt").value);
     const ara = $("#ara").value.toLocaleLowerCase("tr"), fd = $("#fDurum").value, fs = $("#fDers").value;
-    const sec = $("#fDers").value; $("#fDers").innerHTML = '<option value="">Tüm dersler</option>' + dersler().map((d) => `<option ${d === sec ? "selected" : ""}>${esc(d)}</option>`).join("");
-    const L = OGR.filter((o) => (!ara || (o.adSoyad + " " + o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || o.durum === fd) && (!ot || dersParca(o).some((d) => ot.dersler.includes(d))) && (!fs || String(o.dersler).split(/\s*[,;/]\s*/).includes(fs)))
-      .sort(adaGore);
-    const od = OGR.filter((o) => o.durum === "Ödendi");
-    $("#ozet").innerHTML = `<div><b>${OGR.length}</b><span>Kayıtlı öğrenci</span></div><div><b style="color:var(--ok)">${od.length}</b><span>Ödendi</span></div>
-      <div><b style="color:var(--bad)">${OGR.length - od.length}</b><span>Ödenmedi</span></div><div><b>${tl(od.reduce((s, o) => s + sayi(o.tutar), 0))}</b><span>Dekontlardaki toplam</span></div>
+    $("#fDers").innerHTML = '<option value="">Tüm dersler</option>' + dersler().map((d) => `<option value="${esc(d)}" ${d === fs ? "selected" : ""}>${esc(d)} (${say(KAT.filter((k) => k.ders === d))})</option>`).join("");
+    const kapsam = (ot ? otKat(ot, KAT) : KAT).filter((k) => !fs || k.ders === fs);
+    const L = kapsam.filter((k) => (!ara || (k.o.adSoyad + " " + k.o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || (k.odendi ? "Ödendi" : "Ödenmedi") === fd))
+      .sort((a, b) => (ot ? a.ders.localeCompare(b.ders, "tr") : 0) || adaGore(a.o, b.o) || a.ders.localeCompare(b.ders, "tr"));
+    const od = kapsam.filter((k) => k.odendi).length, kisi = new Set(kapsam.map((k) => k.o)).size;
+    $("#ozet").innerHTML = `<div><b>${kapsam.length}</b><span>Katılımcı (${kisi} öğrenci)</span></div><div><b style="color:var(--ok)">${od}</b><span>Ödeyen katılımcı</span></div>
+      <div><b style="color:var(--bad)">${kapsam.length - od}</b><span>Ödemeyen katılımcı</span></div><div><b>${tl(OGR.filter((o) => o.durum === "Ödendi").reduce((s, o) => s + sayi(o.tutar), 0))}</b><span>Dekontlardaki toplam (tüm okul)</span></div>
       <div><b>${DEK.filter((d) => /Kontrol/.test(d.durum)).length}</b><span>Kontrol bekleyen dekont</span></div>`;
-    $("#ogrTablo").innerHTML = L.length ? L.map((o, i) => `<tr><td>${i + 1}</td><td><b>${esc(o.adSoyad)}</b></td><td>${esc(o.sinif)}</td><td>${esc(o.sube)}</td><td>${esc(o.veliTel)}</td><td>${esc(o.dersler)}</td><td>${esc(o.ucret)}</td>
-      <td><span class="rozet ${o.durum === "Ödendi" ? "ok" : "yok"}">${esc(o.durum || "Ödenmedi")}</span></td><td>${esc(o.dekontNo)}</td><td>${esc(o.odemeTarihi)}</td><td>${esc(o.tutar)}</td><td>${esc(o.not)}</td>
-      <td style="white-space:nowrap"><button class="btn kucuk" data-duz="${esc(o.ogrId)}">Düzenle</button> <button class="btn kucuk tehlike" data-sil="${esc(o.ogrId)}">Sil</button></td></tr>`).join("")
-      : `<tr><td colspan="13" class="not" style="padding:20px;text-align:center">${OGR.length ? "Aramaya uyan öğrenci yok." : "Henüz öğrenci yok. “Excel'den aktar” ile listenizi yükleyin ya da “Öğrenci ekle” ile tek tek ekleyin."}</td></tr>`;
+    $("#ogrTablo").innerHTML = L.length ? L.map(({ o, ders, odendi, dersSayisi }, i) => `<tr><td>${i + 1}</td><td><b>${esc(o.adSoyad)}</b></td><td>${esc(o.sinif)}</td><td>${esc(o.sube)}</td><td>${esc(o.veliTel)}</td><td>${esc(ders)}${dersSayisi > 1 ? ` <small class="not">(${dersSayisi} ders)</small>` : ""}</td><td>${esc(o.ucret)}</td>
+      <td><span class="rozet ${odendi ? "ok" : "yok"}">${odendi ? "Ödendi" : "Ödenmedi"}</span></td><td>${odendi ? esc(o.dekontNo) : ""}</td><td>${odendi ? esc(o.odemeTarihi) : ""}</td><td>${odendi ? esc(o.tutar) : ""}</td><td>${esc(o.not)}</td>
+      <td style="white-space:nowrap"><button class="btn kucuk" data-duz="${esc(o.ogrId)}">Düzenle</button> <button class="btn kucuk tehlike" data-sil="${esc(o.ogrId)}" data-ders="${esc(ders)}">Sil</button></td></tr>`).join("")
+      : `<tr><td colspan="13" class="not" style="padding:20px;text-align:center">${OGR.length ? "Aramaya uyan katılımcı yok." : "Henüz öğrenci yok. “Excel'den aktar” ile listenizi yükleyin ya da “Öğrenci ekle” ile tek tek ekleyin."}</td></tr>`;
     document.querySelectorAll("[data-duz]").forEach((b) => b.onclick = () => ogrDuzenle(OGR.find((o) => o.ogrId === b.dataset.duz)));
-    document.querySelectorAll("[data-sil]").forEach((b) => b.onclick = async () => {
-      const o = OGR.find((x) => x.ogrId === b.dataset.sil); if (!confirm(o.adSoyad + " listeden silinsin mi?")) return;
-      try { OGR = await api("ogrenciSil", { ogrIdler: [o.ogrId] }); ogrCiz(); } catch (x) { alert(x.message); }
+    document.querySelectorAll("#ogrTablo [data-sil]").forEach((b) => b.onclick = async () => {
+      const o = OGR.find((x) => x.ogrId === b.dataset.sil), D = dersAdlari(o), kalan = D.filter((d) => d !== b.dataset.ders);
+      if (!confirm(kalan.length ? `${o.adSoyad}, ${b.dataset.ders} dersinden çıkarılsın mı? (${kalan.join(", ")} kalacak)` : o.adSoyad + " listeden silinsin mi?")) return;
+      try { OGR = kalan.length ? await api("ogrenciKaydet", { ogrenci: { ogrId: o.ogrId, adSoyad: o.adSoyad, dersler: kalan.join(", ") } }) : await api("ogrenciSil", { ogrIdler: [o.ogrId] }); ogrCiz(); } catch (x) { alert(x.message); }
     });
   }
   ["#ara", "#fDurum", "#fOgrt", "#fDers"].forEach((s) => $(s).addEventListener("input", ogrCiz));
@@ -360,6 +375,8 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     const B = ["Ad Soyad", "Sınıf", "Şube", "Veli Tel", "Ders(ler)", "Ücret", "Durum", "Dekont No", "Ödeme Tarihi", "Tutar", "Not"], K = ["adSoyad", "sinif", "sube", "veliTel", "dersler", "ucret", "durum", "dekontNo", "odemeTarihi", "tutar", "not"];
     const ws = XLSX.utils.aoa_to_sheet([B, ...[...OGR].sort(adaGore).map((o) => K.map((k) => o[k] || ""))]), wb = XLSX.utils.book_new();
     ws["!cols"] = B.map((b, i) => ({ wch: i === 0 ? 28 : 14 })); XLSX.utils.book_append_sheet(wb, ws, "Öğrenciler");
+    const wk = XLSX.utils.aoa_to_sheet([["Ders", "Ad Soyad", "Sınıf", "Şube", "Veli Tel", "Durum"], ...katilimcilar().sort((x, y) => x.ders.localeCompare(y.ders, "tr") || adaGore(x.o, y.o)).map((k) => [k.ders, k.o.adSoyad, k.o.sinif, k.o.sube, k.o.veliTel, k.odendi ? "Ödendi" : "Ödenmedi"])]);
+    wk["!cols"] = [16, 28, 8, 8, 16, 12].map((wch) => ({ wch })); XLSX.utils.book_append_sheet(wb, wk, "Katılımcılar");
     XLSX.writeFile(wb, `${oturum.okul.okulAdi} - Öğrenci ve Ödeme Listesi.xlsx`);
   };
 
