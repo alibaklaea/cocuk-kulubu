@@ -304,6 +304,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   function ogretmenler() {
     try { return ((JSON.parse(ls.get("bucuk-ogretmen-v1") || "{}") || {}).ogr || []).filter((t) => t && String(t.ad || "").trim()).map((t) => ({ ad: String(t.ad).trim(), dersler: String(t.alan || "").split(/\n|,/).map(dersAnahtar).filter(Boolean) })); } catch (e) { return []; }
   }
+  const adaGore = (a, b) => String(a.adSoyad).localeCompare(String(b.adSoyad), "tr") || String(a.sinif).localeCompare(String(b.sinif), "tr");
   function ogrCiz() {
     const OT = ogretmenler(), so = $("#fOgrt").value;
     $("#fOgrt").innerHTML = '<option value="">Tüm öğretmenler</option>' + OT.map((t) => { const L = OGR.filter((o) => dersParca(o).some((d) => t.dersler.includes(d))); return `<option value="${esc(t.ad)}" ${t.ad === so ? "selected" : ""}>${esc(t.ad)} (${L.length} öğrenci)</option>`; }).join("");
@@ -311,7 +312,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
     const ara = $("#ara").value.toLocaleLowerCase("tr"), fd = $("#fDurum").value, fs = $("#fDers").value;
     const sec = $("#fDers").value; $("#fDers").innerHTML = '<option value="">Tüm dersler</option>' + dersler().map((d) => `<option ${d === sec ? "selected" : ""}>${esc(d)}</option>`).join("");
     const L = OGR.filter((o) => (!ara || (o.adSoyad + " " + o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || o.durum === fd) && (!ot || dersParca(o).some((d) => ot.dersler.includes(d))) && (!fs || String(o.dersler).split(/\s*[,;/]\s*/).includes(fs)))
-      .sort((a, b) => String(a.sinif).localeCompare(String(b.sinif), "tr") || String(a.adSoyad).localeCompare(String(b.adSoyad), "tr"));
+      .sort(adaGore);
     const od = OGR.filter((o) => o.durum === "Ödendi");
     $("#ozet").innerHTML = `<div><b>${OGR.length}</b><span>Kayıtlı öğrenci</span></div><div><b style="color:var(--ok)">${od.length}</b><span>Ödendi</span></div>
       <div><b style="color:var(--bad)">${OGR.length - od.length}</b><span>Ödenmedi</span></div><div><b>${tl(od.reduce((s, o) => s + sayi(o.tutar), 0))}</b><span>Dekontlardaki toplam</span></div>
@@ -357,7 +358,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   };
   $("#disaBtn").onclick = () => {
     const B = ["Ad Soyad", "Sınıf", "Şube", "Veli Tel", "Ders(ler)", "Ücret", "Durum", "Dekont No", "Ödeme Tarihi", "Tutar", "Not"], K = ["adSoyad", "sinif", "sube", "veliTel", "dersler", "ucret", "durum", "dekontNo", "odemeTarihi", "tutar", "not"];
-    const ws = XLSX.utils.aoa_to_sheet([B, ...OGR.map((o) => K.map((k) => o[k] || ""))]), wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([B, ...[...OGR].sort(adaGore).map((o) => K.map((k) => o[k] || ""))]), wb = XLSX.utils.book_new();
     ws["!cols"] = B.map((b, i) => ({ wch: i === 0 ? 28 : 14 })); XLSX.utils.book_append_sheet(wb, ws, "Öğrenciler");
     XLSX.writeFile(wb, `${oturum.okul.okulAdi} - Öğrenci ve Ödeme Listesi.xlsx`);
   };
