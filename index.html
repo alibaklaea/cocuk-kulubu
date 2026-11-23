@@ -119,6 +119,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
       <div class="arac">
         <input id="ara" type="search" placeholder="Öğrenci ya da veli tel ara…">
         <select id="fDurum"><option value="">Tüm öğrenciler</option><option>Ödendi</option><option>Ödenmedi</option></select>
+        <select id="fOgrt"><option value="">Tüm öğretmenler</option></select>
         <select id="fDers"><option value="">Tüm dersler</option></select>
         <span style="flex:1"></span>
         <button class="btn ana" id="yeniOgr">+ Öğrenci ekle</button>
@@ -297,10 +298,19 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
   const sayi = (s) => { const t = String(s || "").replace(/[^\d,.-]/g, ""); if (!t) return 0; const n = /,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, ""); return parseFloat(n) || 0; };
   const tl = (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TL";
   function dersler() { return [...new Set(OGR.flatMap((o) => String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean)))].sort((a, b) => a.localeCompare(b, "tr")); }
+  // Öğretmen → dersleri: Hesaplama bölümündeki öğretmen kayıtlarından okunur
+  const dersAnahtar = (d) => String(d || "").replace(/\s*\(.*?\)\s*/g, " ").trim().toLocaleUpperCase("tr");
+  const dersParca = (o) => String(o.dersler || "").split(/\s*[,;/]\s*/).filter(Boolean).map(dersAnahtar);
+  function ogretmenler() {
+    try { return ((JSON.parse(ls.get("bucuk-ogretmen-v1") || "{}") || {}).ogr || []).filter((t) => t && String(t.ad || "").trim()).map((t) => ({ ad: String(t.ad).trim(), dersler: String(t.alan || "").split(/\n|,/).map(dersAnahtar).filter(Boolean) })); } catch (e) { return []; }
+  }
   function ogrCiz() {
+    const OT = ogretmenler(), so = $("#fOgrt").value;
+    $("#fOgrt").innerHTML = '<option value="">Tüm öğretmenler</option>' + OT.map((t) => { const L = OGR.filter((o) => dersParca(o).some((d) => t.dersler.includes(d))); return `<option value="${esc(t.ad)}" ${t.ad === so ? "selected" : ""}>${esc(t.ad)} (${L.length} öğrenci)</option>`; }).join("");
+    const ot = OT.find((t) => t.ad === $("#fOgrt").value);
     const ara = $("#ara").value.toLocaleLowerCase("tr"), fd = $("#fDurum").value, fs = $("#fDers").value;
     const sec = $("#fDers").value; $("#fDers").innerHTML = '<option value="">Tüm dersler</option>' + dersler().map((d) => `<option ${d === sec ? "selected" : ""}>${esc(d)}</option>`).join("");
-    const L = OGR.filter((o) => (!ara || (o.adSoyad + " " + o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || o.durum === fd) && (!fs || String(o.dersler).split(/\s*[,;/]\s*/).includes(fs)))
+    const L = OGR.filter((o) => (!ara || (o.adSoyad + " " + o.veliTel).toLocaleLowerCase("tr").includes(ara)) && (!fd || o.durum === fd) && (!ot || dersParca(o).some((d) => ot.dersler.includes(d))) && (!fs || String(o.dersler).split(/\s*[,;/]\s*/).includes(fs)))
       .sort((a, b) => String(a.sinif).localeCompare(String(b.sinif), "tr") || String(a.adSoyad).localeCompare(String(b.adSoyad), "tr"));
     const od = OGR.filter((o) => o.durum === "Ödendi");
     $("#ozet").innerHTML = `<div><b>${OGR.length}</b><span>Kayıtlı öğrenci</span></div><div><b style="color:var(--ok)">${od.length}</b><span>Ödendi</span></div>
@@ -316,7 +326,7 @@ pre.metin{white-space:pre-wrap;font-size:11.5px;background:var(--thead);padding:
       try { OGR = await api("ogrenciSil", { ogrIdler: [o.ogrId] }); ogrCiz(); } catch (x) { alert(x.message); }
     });
   }
-  ["#ara", "#fDurum", "#fDers"].forEach((s) => $(s).addEventListener("input", ogrCiz));
+  ["#ara", "#fDurum", "#fOgrt", "#fDers"].forEach((s) => $(s).addEventListener("input", ogrCiz));
   function ogrDuzenle(o) {
     const f = $("#fOgr"); f.reset(); $("#ogrDlgBaslik").textContent = o ? "Öğrenciyi düzenle" : "Yeni öğrenci";
     ["ogrId", "adSoyad", "sinif", "sube", "veliTel", "ucret", "dersler", "durum", "dekontNo", "odemeTarihi", "tutar", "not"].forEach((k) => { if (f[k]) f[k].value = (o && o[k]) || (k === "durum" ? "Ödenmedi" : ""); });
